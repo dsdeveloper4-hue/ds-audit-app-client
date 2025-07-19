@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 import { useState } from "react";
 import api from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const {
@@ -17,6 +18,7 @@ export default function LoginPage() {
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const router = useRouter();
 
   const onSubmit = async (data: any) => {
     setLoading(true);
@@ -24,6 +26,7 @@ export default function LoginPage() {
     try {
       const res = await api.post("api/auth/login", data); // adjust your backend route
       setMessage(res.data.message || "✅ Login successful");
+      router.push('/sales')
       // Optional: redirect or store user/token
     } catch (err: any) {
       setMessage(err?.response?.data?.message || " Login failed");
