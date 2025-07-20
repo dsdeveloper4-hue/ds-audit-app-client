@@ -2,18 +2,20 @@
 
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+
+type ItemInfo = {
+  item_name: string;
+  sales_price: number;
+};
 
 type Product = {
   id: number;
-  item_id: number;
-  price_per_unit: number;
-  purchase_price: number;
   sales_qty: number;
   total_cost: number;
+  created_date: string; // Assuming this comes from backend
+  item_info: ItemInfo;
 };
 
 const fetchProducts = async (): Promise<Product[]> => {
@@ -31,48 +33,85 @@ export default function SalesPage() {
     return (
       <div className="p-4 space-y-2">
         {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="h-28 w-full rounded-xl" />
+          <Skeleton key={i} className="h-10 w-full rounded-md" />
         ))}
       </div>
     );
   }
 
   if (error) {
-    return <div className="text-red-500 p-4">❌ Failed to load products</div>;
+    return (
+      <div className="flex h-[80vh] flex-col items-center justify-center p-6 space-y-4 text-red-600">
+        <svg
+          className="w-12 h-12 animate-spin text-red-500"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          ></circle>
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+          ></path>
+        </svg>
+        <p className="text-lg font-semibold">❌ Failed to load products.</p>
+        <p className="text-center text-sm text-red-400">
+          Please check your internet connection or try again later.
+        </p>
+      </div>
+    );
   }
 
   return (
-    <ScrollArea className="h-[80vh] p-4">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {data?.map((product) => (
-          <Card key={product.id} className="shadow-sm border border-muted">
-            <CardHeader>
-              <CardTitle className="text-base">
-                🧾 Product #{product.item_id}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm text-muted-foreground">
-              <div className="flex justify-between">
-                <span className="font-medium text-gray-700">Unit Price</span>
-                <Badge variant="outline">${product.price_per_unit}</Badge>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium text-gray-700">Total Sold</span>
-                <Badge variant="outline">{product.sales_qty}</Badge>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium text-gray-700">Total Cost</span>
-                <Badge variant="default">${product.total_cost}</Badge>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium text-gray-700">
-                  Purchase Price
-                </span>
-                <Badge variant="outline">${product.purchase_price}</Badge>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+    <ScrollArea className="h-[calc(100vh-100px)] px-4 py-6">
+      <div className="border rounded-md overflow-x-auto max-h-[70vh]">
+        <table className="w-full text-sm text-left border-collapse">
+          <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
+            <tr>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 z-10">
+                Product Name
+              </th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 z-10">Price</th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 z-10">
+                Sales Qty
+              </th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 z-10">
+                Total Sales
+              </th>
+              <th className="px-4 py-3 sticky top-0 bg-gray-100 z-10">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data?.map((product) => (
+              <tr
+                key={product.id}
+                className="border-t hover:bg-gray-50 transition-colors"
+              >
+                <td className="px-4 py-3 font-medium text-gray-800">
+                  {product.item_info?.item_name ?? "Unnamed"}
+                </td>
+                <td className="px-4 py-3">
+                  ৳ {product.item_info?.sales_price}
+                </td>
+                <td className="px-4 py-3">{product.sales_qty}</td>
+                <td className="px-4 py-3">৳ {product.total_cost}</td>
+                <td className="px-4 py-3">
+                  {product.created_date
+                    ? new Date(product.created_date).toLocaleDateString()
+                    : "N/A"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </ScrollArea>
   );
