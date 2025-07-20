@@ -2,7 +2,6 @@
 
 import { useInfiniteQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useRef, useState } from "react";
 
@@ -70,7 +69,7 @@ export default function SalesPage() {
       },
       {
         root: scrollArea,
-        threshold: 1.0,
+        threshold: 0.1,
       }
     );
 
@@ -129,9 +128,12 @@ export default function SalesPage() {
   const products = data?.pages.flatMap((page) => page.products) ?? [];
 
   return (
-    <div className="px-4 py-6">
+    <div className="px-4 py-2">
+      <div className="bg-red-400 w-full h-[35vh] mb-5">
+        
+      </div>
       <div className="border rounded-md overflow-hidden">
-        <div className="h-[calc(100dvh-100px)] overflow-auto">
+        <div className="h-[calc(50vh-10px)] overflow-auto">
           <table className="min-w-[640px] w-full text-sm text-left border-collapse">
             <thead className="bg-blue-800 text-white uppercase text-sm">
               <tr>
