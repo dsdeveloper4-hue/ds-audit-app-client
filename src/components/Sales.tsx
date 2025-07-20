@@ -127,11 +127,34 @@ export default function SalesPage() {
 
   const products = data?.pages.flatMap((page) => page.products) ?? [];
 
+  // CSV Download function
+
+  // const downloadCSV = () => {
+  //   if (data?.length === 0) return;
+
+  //   const headers = Object.keys(data[0]);
+  //   const rows = data.map((item) => headers.map((key) => (item as any)[key]));
+
+  //   const csv = [headers, ...rows]
+  //     .map((row) => row.join(","))
+  //     .join("\n");
+
+  //   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  //   const url = URL.createObjectURL(blob);
+
+  //   const link = document.createElement("a");
+  //   link.href = url;
+  //   link.setAttribute("download", "users.csv");
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  // };
+
+  console.log(data?.pages[0].products);
+
   return (
     <div className="px-4 py-2">
-      <div className="bg-red-400 w-full h-[35vh] mb-5">
-        
-      </div>
+      <div className="bg-red-400 w-full h-[35vh] mb-5"></div>
       <div className="border rounded-md overflow-hidden">
         <div className="h-[calc(50vh-10px)] overflow-auto">
           <table className="min-w-[640px] w-full text-sm text-left border-collapse">
