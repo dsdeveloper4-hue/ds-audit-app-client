@@ -25,7 +25,7 @@ type FetchProductsResponse = {
 };
 
 export default function SalesPage() {
-  const [limit, setLimit] = useState(5);
+  const [limit, setLimit] = useState(50);
 
   const fetchProducts = async ({
     pageParam = 1,
@@ -129,82 +129,83 @@ export default function SalesPage() {
   const products = data?.pages.flatMap((page) => page.products) ?? [];
 
   return (
-    <ScrollArea className="scroll-container h-[calc(100dvh-100px)] px-4 py-6">
-      <div className="border rounded-md overflow-x-auto">
-        <table className="min-w-[640px] w-full text-sm text-left border-collapse">
-          <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
-            <tr>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 z-10">
-                Product Name
-              </th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 z-10">Price</th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 z-10">
-                Sales Qty
-              </th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 z-10">
-                Total Sales
-              </th>
-              <th className="px-4 py-3 sticky top-0 bg-gray-100 z-10">Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product) => (
-              <tr
-                key={product.id}
-                className="border-t hover:bg-gray-50 transition-colors"
-              >
-                <td className="px-4 py-3 font-medium text-gray-800">
-                  {product.item_info?.item_name ?? "Unnamed"}
-                </td>
-                <td className="px-4 py-3">
-                  ৳ {product.item_info?.sales_price}
-                </td>
-                <td className="px-4 py-3">{product.sales_qty}</td>
-                <td className="px-4 py-3">৳ {product.total_cost}</td>
-                <td className="px-4 py-3">
-                  {product.created_date
-                    ? new Date(product.created_date).toLocaleDateString()
-                    : "N/A"}
-                </td>
+    <div className="px-4 py-6">
+      <div className="border rounded-md overflow-hidden">
+        <div className="h-[calc(100dvh-100px)] overflow-auto">
+          <table className="min-w-[640px] w-full text-sm text-left border-collapse">
+            <thead className="bg-blue-800 text-white uppercase text-sm">
+              <tr>
+                <th className="px-4 py-3 sticky top-0 bg-blue-800 z-10">
+                  Product Name
+                </th>
+                <th className="px-4 py-3 sticky top-0 bg-blue-800 z-10">
+                  Price
+                </th>
+                <th className="px-4 py-3 sticky top-0 bg-blue-800 z-10">
+                  Sales Qty
+                </th>
+                <th className="px-4 py-3 sticky top-0 bg-blue-800 z-10">
+                  Total Sales
+                </th>
+                <th className="px-4 py-3 sticky top-0 bg-blue-800 z-10">
+                  Date
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {hasNextPage && (
-          <div
-            ref={loadMoreRef}
-            className="h-10 flex items-center justify-center"
-          >
-            {isFetchingNextPage ? (
-              <div className="flex items-center space-x-2">
-                <svg
-                  className="w-5 h-5 animate-spin text-gray-500"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
+            </thead>
+
+            <tbody>
+              {products.map((product) => (
+                <tr
+                  key={product.id}
+                  className="border-t hover:bg-gray-50 transition-colors"
                 >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                  ></path>
-                </svg>
-                <span>Loading more...</span>
-              </div>
-            ) : (
-              <span>Scroll to load more</span>
-            )}
-          </div>
-        )}
+                  <td className="px-4 py-3 font-medium text-gray-800">
+                    {product.item_info?.item_name ?? "Unnamed"}
+                  </td>
+                  <td className="px-4 py-3">
+                    ৳ {product.item_info?.sales_price}
+                  </td>
+                  <td className="px-4 py-3">{product.sales_qty}</td>
+                  <td className="px-4 py-3">৳ {product.total_cost}</td>
+                  <td className="px-4 py-3">
+                    {product.created_date
+                      ? new Date(product.created_date).toLocaleDateString()
+                      : "N/A"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {hasNextPage && (
+            <div
+              ref={loadMoreRef}
+              className="h-20 flex flex-col items-center justify-center text-sm text-gray-600"
+            >
+              {isFetchingNextPage ? (
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-blue-600 font-medium animate-pulse">
+                    Loading more...
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500">⬇ Scroll to load more</span>
+                  <span className="text-blue-500 text-xl animate-bounce">
+                    •
+                  </span>
+                  <span className="text-blue-500 text-xl animate-bounce delay-200">
+                    •
+                  </span>
+                  <span className="text-blue-500 text-xl animate-bounce delay-400">
+                    •
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-    </ScrollArea>
+    </div>
   );
 }
