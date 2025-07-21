@@ -4,7 +4,7 @@ import { ProductType } from "@/type";
 const ProductTable = ({ products }: { products: ProductType[] }) => {
   return (
     <div className="border rounded-md overflow-hidden">
-      <div className="h-[calc(75vh-10px)] overflow-auto scroll-container">
+      <div className="h-[calc(65vh-10px)] overflow-auto scroll-container">
         <table className="min-w-[640px] w-full text-sm text-left border-collapse">
           <thead className="bg-blue-800 text-white uppercase text-sm">
             <tr>

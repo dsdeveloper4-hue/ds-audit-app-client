@@ -7,41 +7,146 @@ import Loading from "./Loading";
 import ErrorPage from "./Error";
 import ProductTable from "./ProductTable";
 import { ProductType } from "@/type";
+import { useState } from "react";
+import { CalendarIcon } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { motion } from "framer-motion";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 
-
-
-const fetchAllProducts = async (): Promise<ProductType[]> => {
-  const res = await api.get(`/api/product-dashboard`);
+const fetchAllProducts = async ({
+  queryKey,
+}: {
+  queryKey: [string, { startDate: string; endDate: string }];
+}): Promise<ProductType[]> => {
+  const [, { startDate, endDate }] = queryKey;
+  const res = await api.get(`/api/product-dashboard`, {
+    params: { startDate, endDate },
+  });
   return res.data.products;
 };
 
+const today = format(new Date(), "yyyy-MM-dd");
+
 export default function SalesPage() {
+  const [startDate, setStartDate] = useState<string>(today);
+  const [endDate, setEndDate] = useState<string>(today);
+
   const {
     data: products = [],
     isLoading,
     error,
+    refetch,
   } = useQuery({
-    queryKey: ["sales-products"],
+    queryKey: ["sales-products", { startDate, endDate }],
     queryFn: fetchAllProducts,
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
+    enabled: !!startDate && !!endDate,
   });
 
-  if (isLoading) {
-    return <Loading />;
-  }
-
-  if (error) {
-    return <ErrorPage />;
-  }
+  const handleSearch = () => {
+    if (startDate && endDate) {
+      refetch();
+    }
+  };
 
   return (
-    <div className="px-4 py-2">
-      <div className="bg-red-400 w-full h-[10vh] mb-5 flex items-center justify-between px-4">
-        <CSV products={products} />
-      </div>
+    <motion.div
+      className="px-4 py-6  mx-auto"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      {/* Search & Export Card */}
+      <Card className="mb-6 shadow-md border border-muted rounded-2xl">
+        <CardContent className="px-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            {/* From Date Picker */}
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-muted-foreground">
+                From Date
+              </label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-[200px] justify-start text-left font-normal"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? (
+                      format(parseISO(startDate), "PPP")
+                    ) : (
+                      <span>Select date</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate ? parseISO(startDate) : undefined}
+                    onSelect={(date) =>
+                      setStartDate(date ? format(date, "yyyy-MM-dd") : "")
+                    }
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
 
-      <ProductTable products={products} />
-    </div>
+            {/* To Date Picker */}
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-muted-foreground">
+                To Date
+              </label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-[200px] justify-start text-left font-normal"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? (
+                      format(parseISO(endDate), "PPP")
+                    ) : (
+                      <span>Select date</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate ? parseISO(endDate) : undefined}
+                    onSelect={(date) =>
+                      setEndDate(date ? format(date, "yyyy-MM-dd") : "")
+                    }
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Search Button */}
+            <Button className="mt-1 sm:mt-6 h-10" onClick={handleSearch}>
+              Search
+            </Button>
+          </div>
+
+          {/* CSV Button */}
+          <div className="mt-2 md:mt-0">
+            <CSV products={products} />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Table / Loading / Error */}
+      {isLoading && <Loading />}
+      {error && <ErrorPage />}
+      {!isLoading && !error && <ProductTable products={products} />}
+    </motion.div>
   );
 }
