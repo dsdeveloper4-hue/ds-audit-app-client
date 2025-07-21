@@ -1,21 +1,10 @@
 import React from "react";
 import { Button } from "./ui/button";
+import { ProductType } from "@/type";
 
-type ItemInfo = {
-  item_name: string;
-  sales_price: number;
-};
-
-interface Product {
-  id: number;
-  sales_qty: number;
-  total_cost: number;
-  created_date: string;
-  item_info: ItemInfo;
-};
 
 interface PropsType {
-  products: Product[]
+  products: ProductType[];
 }
 
 const CSV = ({products}: PropsType) => {
