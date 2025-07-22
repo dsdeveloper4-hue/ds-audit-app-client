@@ -2,12 +2,21 @@ import React from "react";
 import { Button } from "./ui/button";
 import { ProductType } from "@/type";
 
-
-interface PropsType {
+type PropsType = {
   products: ProductType[];
-}
+  totalQty: number;
+  totalAmount: number;
+  startDate: string;
+  endDate: string;
+};
 
-const CSV = ({products}: PropsType) => {
+const CSV = ({
+  products,
+  totalQty,
+  totalAmount,
+  startDate,
+  endDate,
+}: PropsType) => {
   const downloadCSV = () => {
     if (products.length === 0) return;
 
@@ -16,17 +25,30 @@ const CSV = ({products}: PropsType) => {
       "Price",
       "Sales Qty",
       "Total Sales",
-      "Date",
+      `${startDate}  to ${endDate}`,
     ];
 
     const rows = products.map((product) => [
-      product.item_info?.item_name ?? "Unnamed",
-      product.item_info?.sales_price ?? 0,
-      product.sales_qty,
-      product.total_cost,
-      product.created_date
-        ? new Date(product.created_date).toLocaleDateString()
+      product.item?.item_name ?? "Unnamed",
+      product.item?.sales_price ?? 0,
+      product.total_qty ?? 0,
+      product.total_amount ?? 0,
+      product.sales_date
+        ? new Date(product.sales_date).toLocaleDateString()
         : "N/A",
+    ]);
+
+    // Add a blank row before total for clarity (optional)
+    rows.push([]);
+
+    // Add the total row — align with columns:
+    // For example: ["Total:", "", totalQty, totalAmount, ""]
+    rows.push([
+      "Total:",
+      "",
+      totalQty,
+      totalAmount,
+      "", // no date for total
     ]);
 
     const csvContent = [headers, ...rows]
@@ -49,7 +71,8 @@ const CSV = ({products}: PropsType) => {
     link.click();
     document.body.removeChild(link);
   };
-  return <Button onClick={downloadCSV}> Download CSV</Button>;
+
+  return <Button onClick={downloadCSV}>Download CSV</Button>;
 };
 
 export default CSV;

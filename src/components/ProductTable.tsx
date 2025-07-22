@@ -35,8 +35,8 @@ export default function SalesTable({
                 <th className="px-4 py-3 sticky top-0 bg-blue-500 z-10">
                   Total Sales
                 </th>
-                <th className="px-4 py-3 sticky top-0 bg-blue-500 z-10">
-                  Date
+                <th className="px-4 py-3 lowercase sticky top-0 bg-blue-500 z-10">
+                  {startDate}  to {endDate}
                 </th>
               </tr>
             </thead>

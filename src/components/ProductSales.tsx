@@ -35,7 +35,6 @@ const fetchAllProducts = async ({
 const today = format(new Date(), "yyyy-MM-dd");
 const formatted = format(new Date(2025, 6, 15), "yyyy-MM-dd");
 
-
 export default function SalesPage() {
   const [startDate, setStartDate] = useState<string>(formatted);
   const [endDate, setEndDate] = useState<string>(today);
@@ -141,7 +140,13 @@ export default function SalesPage() {
 
           {/* CSV Button */}
           <div className="mt-2 md:mt-0">
-            <CSV products={products} />
+            <CSV
+              products={products}
+              endDate={endDate}
+              startDate={startDate}
+              totalAmount={totalAmount}
+              totalQty={totalQty}
+            />
           </div>
         </CardContent>
       </Card>
@@ -154,9 +159,8 @@ export default function SalesPage() {
           products={products}
           totalAmount={totalAmount}
           totalQty={totalQty}
-        startDate={startDate}
-        endDate={endDate}
-          
+          startDate={startDate}
+          endDate={endDate}
         />
       )}
     </motion.div>
