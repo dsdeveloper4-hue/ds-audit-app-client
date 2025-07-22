@@ -15,7 +15,7 @@ export default function Navbar({
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="text-xl font-bold text-blue-600">
-          MyApp
+          Sales Dashboard
         </Link>
 
         {/* Desktop Menu */}
@@ -55,7 +55,7 @@ export default function Navbar({
           </button>
         </div>
       </div>
-
+          
       {/* Mobile Menu */}
       {open && (
         <div className="md:hidden px-4 pb-4">
