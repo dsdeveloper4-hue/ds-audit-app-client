@@ -37,25 +37,22 @@ const today = format(new Date(), "yyyy-MM-dd");
 export default function SalesPage() {
   const [startDate, setStartDate] = useState<string>(today);
   const [endDate, setEndDate] = useState<string>(today);
+  const [totalQty, setTotalQty] = useState<number>(0);
+  const [totalAmount, setTotalAmount] = useState<number>(0);
 
   const {
     data: products = [],
     isLoading,
     error,
-    refetch,
+    isSuccess,
   } = useQuery({
     queryKey: ["sales-products", { startDate, endDate }],
     queryFn: fetchAllProducts,
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
     enabled: !!startDate && !!endDate,
+    
   });
-
-  const handleSearch = () => {
-    if (startDate && endDate) {
-      refetch();
-    }
-  };
 
   return (
     <motion.div
@@ -129,11 +126,6 @@ export default function SalesPage() {
                 </PopoverContent>
               </Popover>
             </div>
-
-            {/* Search Button */}
-            <Button className="mt-1 sm:mt-6 h-10" onClick={handleSearch}>
-              Search
-            </Button>
           </div>
 
           {/* CSV Button */}
