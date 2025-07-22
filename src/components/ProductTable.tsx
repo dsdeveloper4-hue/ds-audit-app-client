@@ -1,13 +1,22 @@
-"use client";
-
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { ProductType } from "@/type";
 
-export default function SalesTable({ products }: { products: ProductType[] }) {
-  const totalQty = products.reduce((sum, p) => sum + p.total_qty, 0);
-  const totalAmount = products.reduce((sum, p) => sum + p.total_amount, 0);
+type PropsType = {
+  products: ProductType[];
+  totalQty: number;
+  totalAmount: number;
+  startDate: string;
+  endDate: string;
+};
 
+export default function SalesTable({
+  products,
+  totalQty,
+  totalAmount,
+  startDate,
+  endDate,
+}: PropsType) {
   return (
     <Card className="p-4 border shadow-sm rounded-2xl">
       <ScrollArea className="h-[60vh]">

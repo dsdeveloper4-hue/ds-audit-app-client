@@ -7,7 +7,7 @@ import Loading from "./Loading";
 import ErrorPage from "./Error";
 import ProductTable from "./ProductTable";
 import { ProductType } from "@/type";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CalendarIcon } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { motion } from "framer-motion";
@@ -33,9 +33,11 @@ const fetchAllProducts = async ({
 };
 
 const today = format(new Date(), "yyyy-MM-dd");
+const formatted = format(new Date(2025, 6, 15), "yyyy-MM-dd");
+
 
 export default function SalesPage() {
-  const [startDate, setStartDate] = useState<string>(today);
+  const [startDate, setStartDate] = useState<string>(formatted);
   const [endDate, setEndDate] = useState<string>(today);
   const [totalQty, setTotalQty] = useState<number>(0);
   const [totalAmount, setTotalAmount] = useState<number>(0);
@@ -44,16 +46,25 @@ export default function SalesPage() {
     data: products = [],
     isLoading,
     error,
-    isSuccess,
   } = useQuery({
     queryKey: ["sales-products", { startDate, endDate }],
     queryFn: fetchAllProducts,
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
     enabled: !!startDate && !!endDate,
-    
   });
 
+  useEffect(() => {
+    if (products.length) {
+      const qty = products.reduce((sum, p) => sum + p.total_qty, 0);
+      const amount = products.reduce((sum, p) => sum + p.total_amount, 0);
+      setTotalQty(qty);
+      setTotalAmount(amount);
+    } else {
+      setTotalQty(0);
+      setTotalAmount(0);
+    }
+  }, [products]);
   return (
     <motion.div
       className="px-4 py-6  mx-auto"
@@ -138,7 +149,16 @@ export default function SalesPage() {
       {/* Table / Loading / Error */}
       {isLoading && <Loading />}
       {error && <ErrorPage />}
-      {!isLoading && !error && <ProductTable products={products} />}
+      {!isLoading && !error && (
+        <ProductTable
+          products={products}
+          totalAmount={totalAmount}
+          totalQty={totalQty}
+        startDate={startDate}
+        endDate={endDate}
+          
+        />
+      )}
     </motion.div>
   );
 }
