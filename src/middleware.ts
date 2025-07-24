@@ -14,21 +14,16 @@ export async function middleware(req: NextRequest) {
     const verifyRes = await fetch(VERIFY_ENDPOINT, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Cookie: `Auth_Token=${token}`,
       },
     });
     if (!verifyRes.ok) {
-      // ❌ Invalid or expired token
+      // Invalid or expired token
       return redirectToLogin(req);
     }
 
     const data = await verifyRes.json();
-    // ✅ Verified – allow the request to continue
-    const requestHeaders = new Headers(req.headers);
-    requestHeaders.set("x-user-id", data.user?.id || "");
-    requestHeaders.set("x-user-role", data.user?.role || "");
-
-    return NextResponse.next({ request: { headers: requestHeaders } });
+    return NextResponse.next(data);
   } catch (error) {
     // ❌ Error while verifying
     return redirectToLogin(req);
@@ -39,7 +34,6 @@ export async function middleware(req: NextRequest) {
 function redirectToLogin(req: NextRequest) {
   return NextResponse.redirect(new URL(`/login`, req.url));
 }
-
 
 export const config = {
   matcher: [
