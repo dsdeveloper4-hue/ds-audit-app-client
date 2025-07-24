@@ -7,7 +7,7 @@ import { ArrowLeft } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-6 py-12 text-center bg-white dark:bg-gray-950">
+    <div className="flex flex-col fixed top-0 bottom-0 left-0 right-0 items-center justify-center  px-6 py-12 text-center bg-white dark:bg-gray-950">
       <motion.h1
         className="text-[100px] font-extrabold text-gray-800 dark:text-white leading-none mb-4"
         initial={{ opacity: 0, y: -30 }}
