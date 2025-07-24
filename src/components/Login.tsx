@@ -71,14 +71,11 @@ export default function LoginPage() {
 
             {loginMutation.isSuccess && (
               <p className="text-center text-sm text-green-600">
-                ✅ {loginMutation.data?.message || "Login successful"}
+                ✅ "Login successful"
               </p>
             )}
             {loginMutation.isError && (
-              <p className="text-center text-sm text-red-600">
-                ❌{" "}
-                {loginMutation.error?.response?.data?.message || "Login failed"}
-              </p>
+              <p className="text-center text-sm text-red-600">"Login failed"</p>
             )}
           </form>
         </CardContent>
