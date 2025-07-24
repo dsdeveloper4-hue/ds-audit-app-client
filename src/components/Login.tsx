@@ -24,19 +24,18 @@ export default function LoginPage() {
     setLoading(true);
     setMessage("");
     try {
-      const res = await api.post("api/auth/login", data); // adjust your backend route
+      const res = await api.post("api/auth/login", data); // endpoint should accept username & mobile
       setMessage(res.data.message || "✅ Login successful");
-      router.push('/sales')
-      // Optional: redirect or store user/token
+      router.push("/sales");
     } catch (err: any) {
-      setMessage(err?.response?.data?.message || " Login failed");
+      setMessage(err?.response?.data?.message || "❌ Login failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <MaxWidthWrapper className="flex items-center justify-center min-h-screen">
+    <MaxWidthWrapper className="flex items-center justify-center min-h-[80vh]">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-center text-2xl">🔐 Login</CardTitle>
@@ -44,26 +43,27 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Input
-              {...register("email", { required: true })}
-              type="email"
-              placeholder="Email"
+              {...register("username", { required: true })}
+              type="text"
+              placeholder="Username"
             />
-            {errors.email && (
-              <p className="text-sm text-red-500">Email is required</p>
+            {errors.username && (
+              <p className="text-sm text-red-500">Username is required</p>
             )}
 
             <Input
-              {...register("password", { required: true })}
-              type="password"
-              placeholder="Password"
+              {...register("mobile", { required: true })}
+              type="tel"
+              placeholder="Mobile Number"
             />
-            {errors.password && (
-              <p className="text-sm text-red-500">Password is required</p>
+            {errors.mobile && (
+              <p className="text-sm text-red-500">Mobile number is required</p>
             )}
 
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Logging in..." : "Login"}
             </Button>
+
             {message && (
               <p
                 className={`text-center text-sm ${
