@@ -8,8 +8,8 @@ export default function Home() {
           Hey, welcome to <span className="text-blue-600">Digital Seba</span>
         </h1>
         <p className="text-lg sm:text-xl text-gray-600 max-w-xl">
-          We're glad to have you here. Explore our services and discover how we
-          can help your digital journey.
+          We&lsquo;re glad to have you here. Explore our services and discover
+          how we can help your digital journey.
         </p>
       </div>
     </MaxWidthWrapper>
