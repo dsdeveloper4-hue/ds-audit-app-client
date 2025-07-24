@@ -2,8 +2,8 @@ import SalesPage from "@/components/ProductSales";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Dashboard",
-  description: "This is product dashboard.",
+  title: "Sales Dashboard",
+  description: "This is sales dashboard.",
 };
 const page = () => {
   return <SalesPage />;
