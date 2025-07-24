@@ -5,9 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
-import { useState } from "react";
 import api from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function LoginPage() {
   const {
@@ -16,22 +16,23 @@ export default function LoginPage() {
     formState: { errors },
   } = useForm();
 
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
   const router = useRouter();
+  const queryClient = useQueryClient();
 
-  const onSubmit = async (data: any) => {
-    setLoading(true);
-    setMessage("");
-    try {
-      const res = await api.post("api/auth/login", data); // endpoint should accept username & mobile
-      setMessage(res.data.message || "✅ Login successful");
+  // ✅ Mutation to handle login
+  const loginMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await api.post("api/auth/login", data);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["auth-status"] });
       router.push("/sales");
-    } catch (err: any) {
-      setMessage(err?.response?.data?.message || "❌ Login failed");
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const onSubmit = (data: any) => {
+    loginMutation.mutate(data);
   };
 
   return (
@@ -60,17 +61,23 @@ export default function LoginPage() {
               <p className="text-sm text-red-500">Mobile number is required</p>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Logging in..." : "Login"}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loginMutation.isPending}
+            >
+              {loginMutation.isPending ? "Logging in..." : "Login"}
             </Button>
 
-            {message && (
-              <p
-                className={`text-center text-sm ${
-                  message.startsWith("✅") ? "text-green-600" : "text-red-600"
-                }`}
-              >
-                {message}
+            {loginMutation.isSuccess && (
+              <p className="text-center text-sm text-green-600">
+                ✅ {loginMutation.data?.message || "Login successful"}
+              </p>
+            )}
+            {loginMutation.isError && (
+              <p className="text-center text-sm text-red-600">
+                ❌{" "}
+                {loginMutation.error?.response?.data?.message || "Login failed"}
               </p>
             )}
           </form>
