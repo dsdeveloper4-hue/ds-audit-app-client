@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, SubmitHandler } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,29 +9,43 @@ import api from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+// ✅ Define the shape of the login form data
+interface LoginFormData {
+  username: string;
+  mobile: string;
+}
+
+interface UserType {
+  user: {
+    userId: string;
+    role: number;
+    name: string;
+  };
+}
+
 export default function LoginPage() {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+  } = useForm<LoginFormData>();
 
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  // ✅ Mutation to handle login
+  // ✅ Mutation with proper typing
   const loginMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: LoginFormData): Promise<UserType> => {
       const res = await api.post("api/auth/login", data);
       return res.data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["auth-status"] });
       router.push("/sales");
     },
   });
 
-  const onSubmit = (data: any) => {
+  const onSubmit: SubmitHandler<LoginFormData> = (data) => {
     loginMutation.mutate(data);
   };
 
@@ -71,11 +85,13 @@ export default function LoginPage() {
 
             {loginMutation.isSuccess && (
               <p className="text-center text-sm text-green-600">
-                ✅ "Login successful"
+                ✅ &quot;Login successful&quot;
               </p>
             )}
             {loginMutation.isError && (
-              <p className="text-center text-sm text-red-600">"Login failed"</p>
+              <p className="text-center text-sm text-red-600">
+                &quot;Login failed&quot;
+              </p>
             )}
           </form>
         </CardContent>

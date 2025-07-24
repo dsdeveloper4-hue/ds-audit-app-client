@@ -10,11 +10,14 @@ export async function middleware(req: NextRequest) {
   if (!token && pathname === "/login") {
     return NextResponse.next();
   }
+
   if (!token) {
     return redirectToLogin(req);
   }
 
-
+  if (token && pathname === "/login") {
+    return NextResponse.redirect(new URL(`/`, req.url));
+  }
 
   try {
     const verifyRes = await fetch(VERIFY_ENDPOINT, {
@@ -31,7 +34,8 @@ export async function middleware(req: NextRequest) {
     const data = await verifyRes.json();
     return NextResponse.next(data);
   } catch (error) {
-    // ❌ Error while verifying
+    //  Error while verifying
+    console.log(error);
     return redirectToLogin(req);
   }
 }
