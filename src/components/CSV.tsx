@@ -33,9 +33,6 @@ const CSV = ({
       product.item?.sales_price ?? 0,
       product.total_qty ?? 0,
       product.total_amount ?? 0,
-      product.sales_date
-        ? new Date(product.sales_date).toLocaleDateString()
-        : "N/A",
     ]);
 
     // Add a blank row before total for clarity (optional)
