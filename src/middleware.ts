@@ -5,10 +5,16 @@ const VERIFY_ENDPOINT = process.env.AUTH_VERIFY_URL!;
 
 export async function middleware(req: NextRequest) {
   const token = req.cookies.get("Auth_Token")?.value;
+  const pathname = req.nextUrl.pathname;
 
+  if (!token && pathname === "/login") {
+    return NextResponse.next();
+  }
   if (!token) {
     return redirectToLogin(req);
   }
+
+
 
   try {
     const verifyRes = await fetch(VERIFY_ENDPOINT, {
@@ -37,6 +43,6 @@ function redirectToLogin(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!login|register|_next/static|_next/image|favicon.ico|.*\\.(?:jpg|jpeg|png|gif|svg|css|js)).*)",
+    "/((?!register|_next/static|_next/image|favicon.ico|.*\\.(?:jpg|jpeg|png|gif|svg|css|js)).*)",
   ],
 };
