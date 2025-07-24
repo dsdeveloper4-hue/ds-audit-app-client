@@ -45,21 +45,20 @@ export default function Navbar() {
   const isAuthenticated = !!data?.user?.userId;
   const userName = data?.user?.name;
 
-const handleLogout = async () => {
-  try {
-    await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`,
-      {},
-      { withCredentials: true }
-    );
-   queryClient.setQueryData(["auth-status"], null); // forcefully set auth to null
-   queryClient.invalidateQueries({ queryKey: ["auth-status"] }); // mark as stale
-   router.push("/login");
-    router.push("/login");
-  } catch (err) {
-    console.error("Logout failed:", err);
-  }
-};
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`,
+        {},
+        { withCredentials: true }
+      );
+      queryClient.setQueryData(["auth-status"], null); // forcefully set auth to null
+      queryClient.invalidateQueries({ queryKey: ["auth-status"] }); // mark as stale
+      router.push("/login");
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
 
   return (
     <nav className="bg-white fixed top-0 left-0 w-full z-50 shadow-sm border-b">
