@@ -31,7 +31,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <QueryProvider>
-          <Navbar isAuthenticated={true} />
+          <Navbar />
           <MaxWidthWrapper>{children}</MaxWidthWrapper>
         </QueryProvider>
       </body>
