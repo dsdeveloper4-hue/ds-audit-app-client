@@ -41,7 +41,9 @@ export default function SalesPage() {
   const [endDate, setEndDate] = useState<string>(today);
   const [totalQty, setTotalQty] = useState<number>(0);
   const [totalAmount, setTotalAmount] = useState<number>(0);
-  const [sortBy, setSortBy] = useState<"name" | "qty" | "amount">("name");
+  const [sortBy, setSortBy] = useState<
+    "name" | "reversedName" | "qty" | "minQty" | "amount" | "minSales"
+  >("name");
 
   const {
     data: products = [],
@@ -70,8 +72,13 @@ export default function SalesPage() {
   const sortedProducts = [...products].sort((a, b) => {
     if (sortBy === "name")
       return a.item.item_name.localeCompare(b.item.item_name);
+    if (sortBy === "reversedName")
+      return b.item.item_name.localeCompare(a.item.item_name);
     if (sortBy === "qty") return b.total_qty - a.total_qty;
+    if (sortBy === "minQty") return a.total_qty - b.total_qty;
     if (sortBy === "amount") return b.total_amount - a.total_amount;
+    if (sortBy === "minSales") return a.total_amount - b.total_amount;
+
     return 0;
   });
 

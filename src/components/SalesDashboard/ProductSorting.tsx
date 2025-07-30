@@ -10,9 +10,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+type SortOption =
+  | "name"
+  | "reversedName"
+  | "qty"
+  | "minQty"
+  | "amount"
+  | "minSales";
+
 type PropsType = {
-  sortBy: "name" | "qty" | "amount";
-  setSortBy: React.Dispatch<React.SetStateAction<"name" | "qty" | "amount">>;
+  sortBy: SortOption;
+  setSortBy: React.Dispatch<React.SetStateAction<SortOption>>;
 };
 
 const ProductSorting = ({ sortBy, setSortBy }: PropsType) => {
@@ -23,15 +31,18 @@ const ProductSorting = ({ sortBy, setSortBy }: PropsType) => {
       </Label>
       <Select
         value={sortBy}
-        onValueChange={(value: "name" | "qty" | "amount") => setSortBy(value)}
+        onValueChange={(value: SortOption) => setSortBy(value)}
       >
         <SelectTrigger>
           <SelectValue placeholder="Select sorting option" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="name">A-Z (Name)</SelectItem>
+          <SelectItem value="reversedName">Z-A (Name)</SelectItem>
           <SelectItem value="qty">Most Quantity</SelectItem>
+          <SelectItem value="minQty">Min Quantity</SelectItem>
           <SelectItem value="amount">Most Sales</SelectItem>
+          <SelectItem value="minSales">Min Sales</SelectItem>
         </SelectContent>
       </Select>
     </div>
