@@ -20,22 +20,22 @@ export default function SalesTable({
   return (
     <Card className="p-4 border shadow-sm rounded-2xl">
       <ScrollArea className="h-[60vh]">
-        <div className="min-w-full overflow-x-auto">
+        <div className="min-w-full overflow-x-auto relative h-[60vh]">
           <table className="w-full text-sm text-left border-collapse">
-            <thead>
-              <tr className="bg-blue-800 text-white uppercase text-[13px] md:text-[15px]">
-                <th className="px-3 py-3 sticky top-0 bg-blue-600 z-10">#</th>
-                <th className="px-3 py-3 sticky top-0 bg-blue-600 z-10">
+            <thead className="bg-blue-800 text-white uppercase text-[13px] md:text-[15px]">
+              <tr>
+                <th className="px-3 py-3 sticky top-0 bg-blue-800 z-10">#</th>
+                <th className="px-3 py-3 sticky top-0 bg-blue-800 z-10">
                   Product Name
                 </th>
-                <th className="px-3 py-3 sticky top-0 bg-blue-600 z-10">
+                <th className="px-3 py-3 sticky top-0 bg-blue-800 z-10">
                   Price
                 </th>
-                <th className="px-3 py-3 sticky top-0 bg-blue-600 z-10">Qty</th>
-                <th className="px-3 py-3 sticky top-0 bg-blue-600 z-10">
+                <th className="px-3 py-3 sticky top-0 bg-blue-800 z-10">Qty</th>
+                <th className="px-3 py-3 sticky top-0 bg-blue-800 z-10">
                   Total Sales
                 </th>
-                <th className="px-3 py-3 sticky top-0 bg-blue-600 z-10">
+                <th className="px-3 py-3 sticky top-0 bg-blue-800 z-10">
                   {startDate} to {endDate}
                 </th>
               </tr>
@@ -83,7 +83,6 @@ export default function SalesTable({
                     </tr>
                   ))}
 
-                  {/* Footer Row for Totals */}
                   <tr className="bg-blue-100 text-base font-bold border-t-2 h-16 border-blue-300">
                     <td colSpan={3} className="px-3 text-lg text-blue-700">
                       Total:
