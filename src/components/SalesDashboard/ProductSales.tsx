@@ -3,8 +3,8 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import CSV from "./CSV";
-import Loading from "./Loading";
-import ErrorPage from "./Error";
+import Loading from "../Loading";
+import ErrorPage from "../Error";
 import ProductTable from "./ProductTable";
 import { ProductType } from "@/type";
 import { useEffect, useState } from "react";
@@ -19,6 +19,7 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
+import ProductSorting from "./ProductSorting";
 
 const fetchAllProducts = async ({
   queryKey,
@@ -33,12 +34,14 @@ const fetchAllProducts = async ({
 };
 
 const today = format(new Date(), "yyyy-MM-dd");
+const fifteenthDay = format(new Date(2025, 6, 15), "yyyy-MM-dd");
 
 export default function SalesPage() {
-  const [startDate, setStartDate] = useState<string>(today);
+  const [startDate, setStartDate] = useState<string>(fifteenthDay);
   const [endDate, setEndDate] = useState<string>(today);
   const [totalQty, setTotalQty] = useState<number>(0);
   const [totalAmount, setTotalAmount] = useState<number>(0);
+  const [sortBy, setSortBy] = useState<"name" | "qty" | "amount">("name");
 
   const {
     data: products = [],
@@ -63,9 +66,18 @@ export default function SalesPage() {
       setTotalAmount(0);
     }
   }, [products]);
+
+  const sortedProducts = [...products].sort((a, b) => {
+    if (sortBy === "name")
+      return a.item.item_name.localeCompare(b.item.item_name);
+    if (sortBy === "qty") return b.total_qty - a.total_qty;
+    if (sortBy === "amount") return b.total_amount - a.total_amount;
+    return 0;
+  });
+
   return (
     <motion.div
-      className="px-4 py-6  mx-auto"
+      className="px-4 py-6 mx-auto"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
@@ -135,12 +147,15 @@ export default function SalesPage() {
                 </PopoverContent>
               </Popover>
             </div>
+
+            {/* Sorting Dropdown */}
+            <ProductSorting sortBy={sortBy} setSortBy={setSortBy} />
           </div>
 
           {/* CSV Button */}
           <div className="mt-2 md:mt-0">
             <CSV
-              products={products}
+              products={sortedProducts}
               endDate={endDate}
               startDate={startDate}
               totalAmount={totalAmount}
@@ -155,7 +170,7 @@ export default function SalesPage() {
       {error && <ErrorPage />}
       {!isLoading && !error && (
         <ProductTable
-          products={products}
+          products={sortedProducts}
           totalAmount={totalAmount}
           totalQty={totalQty}
           startDate={startDate}

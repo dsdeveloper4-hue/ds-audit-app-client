@@ -1,4 +1,4 @@
-import SalesPage from "@/components/ProductSales";
+import SalesPage from "@/components/SalesDashboard/ProductSales";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {

@@ -20,23 +20,23 @@ export default function SalesTable({
   return (
     <Card className="p-4 border shadow-sm rounded-2xl">
       <ScrollArea className="h-[60vh]">
-        <div className="min-w-[720px]">
+        <div className="min-w-full overflow-x-auto">
           <table className="w-full text-sm text-left border-collapse">
             <thead>
-              <tr className="bg-blue-800 text-white uppercase text-lg">
-                <th className="px-4 py-3 sticky top-0 bg-blue-500 z-10">#</th>
-                <th className="px-4 py-3 sticky top-0 bg-blue-500 z-10">
+              <tr className="bg-blue-800 text-white uppercase text-[13px] md:text-[15px]">
+                <th className="px-3 py-3 sticky top-0 bg-blue-600 z-10">#</th>
+                <th className="px-3 py-3 sticky top-0 bg-blue-600 z-10">
                   Product Name
                 </th>
-                <th className="px-4 py-3 sticky top-0 bg-blue-500 z-10">
+                <th className="px-3 py-3 sticky top-0 bg-blue-600 z-10">
                   Price
                 </th>
-                <th className="px-4 py-3 sticky top-0 bg-blue-500 z-10">Qty</th>
-                <th className="px-4 py-3 sticky top-0 bg-blue-500 z-10">
+                <th className="px-3 py-3 sticky top-0 bg-blue-600 z-10">Qty</th>
+                <th className="px-3 py-3 sticky top-0 bg-blue-600 z-10">
                   Total Sales
                 </th>
-                <th className="px-4 py-3 lowercase sticky top-0 bg-blue-500 z-10">
-                  {startDate}  to {endDate}
+                <th className="px-3 py-3 sticky top-0 bg-blue-600 z-10">
+                  {startDate} to {endDate}
                 </th>
               </tr>
             </thead>
@@ -60,22 +60,22 @@ export default function SalesTable({
                         idx % 2 === 0 ? "bg-white" : "bg-gray-50"
                       } hover:bg-blue-50 transition-colors`}
                     >
-                      <td className="px-4 py-3 text-gray-600 font-medium">
+                      <td className="px-3 py-2 text-gray-600 font-medium">
                         {idx + 1}
                       </td>
-                      <td className="px-4 py-3 font-medium text-gray-800">
+                      <td className="px-3 py-2 font-medium text-gray-800 break-words max-w-[160px]">
                         {product.item.item_name ?? "Unnamed"}
                       </td>
-                      <td className="px-4 py-3 text-gray-700">
+                      <td className="px-3 py-2 text-gray-700">
                         ৳ {product.item.sales_price?.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-gray-700">
+                      <td className="px-3 py-2 text-gray-700">
                         {product.total_qty}
                       </td>
-                      <td className="px-4 py-3 font-bold text-green-600">
+                      <td className="px-3 py-2 font-bold text-green-600">
                         ৳ {product.total_amount?.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground">
+                      <td className="px-3 py-2 text-muted-foreground">
                         {product.sales_date
                           ? new Date(product.sales_date).toLocaleDateString()
                           : "N/A"}
@@ -84,12 +84,12 @@ export default function SalesTable({
                   ))}
 
                   {/* Footer Row for Totals */}
-                  <tr className="bg-blue-100  text-xl font-bold border-t-2 h-16 border-blue-300">
-                    <td colSpan={3} className="px-4  text-2xl ">
+                  <tr className="bg-blue-100 text-base font-bold border-t-2 h-16 border-blue-300">
+                    <td colSpan={3} className="px-3 text-lg text-blue-700">
                       Total:
                     </td>
-                    <td className="px-4 py-3  text-blue-800">{totalQty}</td>
-                    <td className="px-4 py-3 text-green-700">
+                    <td className="px-3 py-2 text-blue-800">{totalQty}</td>
+                    <td className="px-3 py-2 text-green-700">
                       ৳ {totalAmount.toLocaleString()}
                     </td>
                     <td></td>
