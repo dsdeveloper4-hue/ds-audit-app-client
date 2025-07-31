@@ -57,8 +57,8 @@ export default function SalesTable({
                     <tr
                       key={product.item_id}
                       className={`border-t ${
-                        idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                      } hover:bg-blue-50 transition-colors`}
+                        idx % 2 === 0 ? "bg-white" : "bg-gray-100"
+                      } hover:bg-blue-200 transition-colors`}
                     >
                       <td className="px-3 py-2 text-gray-600 font-medium">
                         {idx + 1}
