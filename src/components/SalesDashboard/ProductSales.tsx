@@ -160,11 +160,11 @@ export default function SalesPage() {
             {/* Sorting Dropdown */}
             <ProductSorting sortBy={sortBy} setSortBy={setSortBy} />
 
-            <SelectedProduct
+            {/* <SelectedProduct
               selectedFilters={selectedFilters}
               setSelectedFilters={setSelectedFilters}
               products={sortedProducts}
-            />
+            /> */}
           </div>
 
           {/* CSV Button */}

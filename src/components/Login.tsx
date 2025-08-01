@@ -39,8 +39,9 @@ export default function LoginPage() {
       const res = await api.post("api/auth/login", data);
       return res.data;
     },
-    onSuccess: () => {
+    onSuccess: ({ user }) => {
       queryClient.invalidateQueries({ queryKey: ["auth-status"] });
+      localStorage.setItem("user", JSON.stringify(user));
       router.push("/sales");
     },
   });

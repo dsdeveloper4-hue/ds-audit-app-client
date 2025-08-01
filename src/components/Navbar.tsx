@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { HiOutlineMenu, HiOutlineX } from "react-icons/hi";
@@ -17,52 +17,50 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FaUserCircle } from "react-icons/fa";
+import api from "@/lib/api";
 
-const fetchAuthStatus = async () => {
-  const res = await axios.get<{
-    user: {
-      userId: string;
-      role: number;
-      name: string;
-    };
-  }>(`${process.env.NEXT_PUBLIC_API_URL}/api/verify-jwt`, {
-    withCredentials: true,
-  });
-  return res.data;
+type UserType = {
+  userId: string;
+  role: number;
+  name: string;
 };
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [user, setUser] = useState<UserType | null>(null);
+  const [loading, setLoading] = useState(true);
+
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["auth-status"],
-    queryFn: fetchAuthStatus,
-    retry: false,
-  });
-
-  const isAuthenticated = !!data?.user?.userId;
-  const userName = data?.user?.name;
+  useEffect(() => {
+    // Try to get user from localStorage on mount
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+    setLoading(false);
+  }, []);
 
   const handleLogout = async () => {
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`,
-        {},
-        { withCredentials: true }
-      );
-      queryClient.setQueryData(["auth-status"], null); // forcefully set auth to null
-      queryClient.invalidateQueries({ queryKey: ["auth-status"] }); // mark as stale
+      await api.post("/api/auth/logout");
+      localStorage.removeItem("user");
+      setUser(null);
+      queryClient.setQueryData(["auth-status"], null);
+      queryClient.invalidateQueries({ queryKey: ["auth-status"] });
       router.push("/login");
     } catch (err) {
       console.error("Logout failed:", err);
     }
   };
 
+  const isAuthenticated = !!user;
+  const userName = user?.name;
+
   return (
     <nav className="bg-white fixed top-0 left-0 w-full z-50 shadow-sm border-b">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div className="mx-10 px-4 py-3 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="text-2xl font-bold text-blue-600">
           Digital Seba
@@ -87,7 +85,7 @@ export default function Navbar() {
             </>
           )}
 
-          {isLoading ? (
+          {loading ? (
             <Skeleton className="h-8 w-24 rounded-md" />
           ) : isAuthenticated ? (
             <DropdownMenu>
@@ -153,7 +151,7 @@ export default function Navbar() {
               </>
             )}
 
-            {isLoading ? (
+            {loading ? (
               <Skeleton className="h-8 w-20 rounded-md" />
             ) : isAuthenticated ? (
               <>
