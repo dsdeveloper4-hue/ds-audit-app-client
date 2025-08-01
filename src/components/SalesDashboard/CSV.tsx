@@ -27,7 +27,7 @@ const CSV = ({
       "Total Cost",
       "Total Sales",
       "Total Revenue",
-      "Sales Date",
+      `From ${startDate} To ${endDate}`,
     ];
 
     // Helper: calculate total cost
@@ -47,9 +47,7 @@ const CSV = ({
         cost,
         product.total_amount ?? 0,
         revenue,
-        product.sales_date
-          ? new Date(product.sales_date).toLocaleDateString()
-          : "N/A",
+        "",
       ];
     });
 
@@ -80,14 +78,16 @@ const CSV = ({
       )
       .join("\n");
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob(["\uFEFF" + csvContent], {
+      type: "application/vnd.ms-excel;charset=utf-8;",
+    });
     const url = URL.createObjectURL(blob);
 
     const link = document.createElement("a");
     link.href = url;
     link.setAttribute(
       "download",
-      `sales-products_${startDate}_to_${endDate}.csv`
+      `sales-products_${startDate}_to_${endDate}.xls`
     );
     document.body.appendChild(link);
     link.click();
