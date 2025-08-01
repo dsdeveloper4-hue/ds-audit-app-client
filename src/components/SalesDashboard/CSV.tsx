@@ -23,36 +23,59 @@ const CSV = ({
     const headers = [
       "Product Name",
       "Price",
-      "Sales Qty",
+      "Qty",
+      "Total Cost",
       "Total Sales",
+      "Total Revenue",
+      "Sales Date",
     ];
 
-    const rows = products.map((product) => [
-      product.item?.item_name ?? "Unnamed",
-      product.item?.sales_price ?? 0,
-      product.total_qty ?? 0,
-      product.total_amount ?? 0,
-    ]);
+    // Helper: calculate total cost
+    const totalCost = products.reduce(
+      (acc, product) => acc + product.item.purchase_price * product.total_qty,
+      0
+    );
 
-    // Add a blank row before total for clarity (optional)
+    const rows = products.map((product) => {
+      const cost = product.item.purchase_price * product.total_qty;
+      const revenue = product.total_amount - cost;
+
+      return [
+        product.item?.item_name ?? "Unnamed",
+        product.item?.sales_price ?? 0,
+        product.total_qty ?? 0,
+        cost,
+        product.total_amount ?? 0,
+        revenue,
+        product.sales_date
+          ? new Date(product.sales_date).toLocaleDateString()
+          : "N/A",
+      ];
+    });
+
+    // Add blank row (optional)
     rows.push([]);
 
-    // Add the total row — align with columns:
-    // For example: ["Total:", "", totalQty, totalAmount, ""]
+    // Add total row aligned with the header
     rows.push([
-      "Total:",
+      "Total",
       "",
       totalQty,
+      totalCost,
       totalAmount,
-      "", // no date for total
+      totalAmount - totalCost,
+      "", // empty date column
     ]);
 
     const csvContent = [headers, ...rows]
       .map((row) =>
         row
-          .map((cell) =>
-            typeof cell === "string" && cell.includes(",") ? `"${cell}"` : cell
-          )
+          .map((cell) => {
+            if (typeof cell === "string" && cell.includes(",")) {
+              return `"${cell}"`; // wrap in quotes if contains comma
+            }
+            return cell;
+          })
           .join(",")
       )
       .join("\n");
@@ -62,7 +85,10 @@ const CSV = ({
 
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `sales-products ${startDate} ${endDate}.csv`);
+    link.setAttribute(
+      "download",
+      `sales-products_${startDate}_to_${endDate}.csv`
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

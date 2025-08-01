@@ -20,7 +20,6 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import ProductSorting from "./ProductSorting";
-import SelectedProduct from "./SelectedProduct";
 
 const fetchAllProducts = async ({
   queryKey,
@@ -45,7 +44,7 @@ export default function SalesPage() {
   const [sortBy, setSortBy] = useState<
     "name" | "reversedName" | "qty" | "minQty" | "amount" | "minSales"
   >("name");
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  // const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
   const {
     data: products = [],
