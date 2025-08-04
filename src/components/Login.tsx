@@ -36,7 +36,9 @@ export default function LoginPage() {
   // ✅ Mutation with proper typing
   const loginMutation = useMutation({
     mutationFn: async (data: LoginFormData): Promise<UserType> => {
-      const res = await api.post("api/auth/login", data);
+      const res = await api.post("api/auth/login", data, {
+        withCredentials: true,
+      });
       return res.data;
     },
     onSuccess: ({ user }) => {
