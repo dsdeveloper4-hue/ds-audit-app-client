@@ -14,6 +14,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { useAppSelector } from "@/redux/hook";
 import {
   Popover,
   PopoverTrigger,
@@ -34,16 +35,16 @@ const fetchAllProducts = async ({
 };
 
 const today = format(new Date(), "yyyy-MM-dd");
-const july15 = format(new Date(2025, 6, 15), "yyyy-MM-dd");
+// const july15 = format(new Date(2025, 6, 15), "yyyy-MM-dd");
 export default function SalesPage() {
-  const [startDate, setStartDate] = useState<string>(july15);
+  const [startDate, setStartDate] = useState<string>(today);
   const [endDate, setEndDate] = useState<string>(today);
   const [totalQty, setTotalQty] = useState<number>(0);
   const [totalAmount, setTotalAmount] = useState<number>(0);
+  
   const [sortBy, setSortBy] = useState<
     "name" | "reversedName" | "qty" | "minQty" | "amount" | "minSales"
   >("name");
-  // const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
   const {
     data: products = [],
@@ -58,6 +59,8 @@ export default function SalesPage() {
   });
 
   useEffect(() => {
+
+
     if (products.length) {
       const qty = products.reduce((sum, p) => sum + p.total_qty, 0);
       const amount = products.reduce((sum, p) => sum + p.total_amount, 0);
