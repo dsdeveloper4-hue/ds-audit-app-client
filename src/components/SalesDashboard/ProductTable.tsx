@@ -42,9 +42,6 @@ export default function SalesTable({
                 <th className="px-3 py-3 sticky top-0 bg-blue-800 z-10">
                   Total Revenue
                 </th>
-                <th className="px-3 py-3 sticky top-0 bg-blue-800 z-10">
-                  {startDate} to {endDate}
-                </th>
               </tr>
             </thead>
 
@@ -92,11 +89,6 @@ export default function SalesTable({
                           ৳{" "}
                           {(product.total_amount - totalCost).toLocaleString()}
                         </td>
-                        <td className="px-3 py-2 text-muted-foreground">
-                          {product.sales_date
-                            ? new Date(product.sales_date).toLocaleDateString()
-                            : "N/A"}
-                        </td>
                       </tr>
                     );
                   })}
@@ -128,7 +120,6 @@ export default function SalesTable({
                         )
                       ).toLocaleString()}
                     </td>
-                    <td></td>
                   </tr>
                 </>
               )}

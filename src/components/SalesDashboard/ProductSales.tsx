@@ -34,9 +34,9 @@ const fetchAllProducts = async ({
 };
 
 const today = format(new Date(), "yyyy-MM-dd");
-
+const july15 = format(new Date(2025, 6, 15), "yyyy-MM-dd");
 export default function SalesPage() {
-  const [startDate, setStartDate] = useState<string>(today);
+  const [startDate, setStartDate] = useState<string>(july15);
   const [endDate, setEndDate] = useState<string>(today);
   const [totalQty, setTotalQty] = useState<number>(0);
   const [totalAmount, setTotalAmount] = useState<number>(0);

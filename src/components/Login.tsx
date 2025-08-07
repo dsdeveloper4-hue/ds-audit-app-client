@@ -1,27 +1,24 @@
 "use client";
 
 import { useForm, SubmitHandler } from "react-hook-form";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 import api from "@/lib/api";
-import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-// ✅ Define the shape of the login form data
 interface LoginFormData {
   username: string;
   mobile: string;
 }
 
 interface UserType {
-  token: string;
-  user: {
-    userId: string;
-    role: number;
-    name: string;
-  };
+  userId: string;
+  role: number;
+  name: string;
 }
 
 export default function LoginPage() {
@@ -32,29 +29,32 @@ export default function LoginPage() {
   } = useForm<LoginFormData>();
 
   const router = useRouter();
-  const queryClient = useQueryClient();
 
-  const loginMutation = useMutation({
-    mutationFn: async (
-      data: LoginFormData
-    ): Promise<{ user: UserType["user"]; token: string }> => {
-      const res = await api.post("api/auth/login", data, {
-        withCredentials: true,
-      });
-      return res.data;
-    },
-    onSuccess: ({ user, token }) => {
-      queryClient.invalidateQueries({ queryKey: ["auth-status"] });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
+    try {
+      setLoading(true);
+      setError(null);
+      setSuccess(false);
+
+      const res = await api.post<{ user: UserType; token: string }>(
+        "/api/auth/login",
+        data,
+        { withCredentials: true }
+      );
+
+      const { user } = res.data;
       localStorage.setItem("user", JSON.stringify(user));
+      setSuccess(true);
       router.push("/sales");
-    },
-    onError: (error) => {
-      console.error("Login Error:", error); // Optional: Keep for debugging
-    },
-  });
-
-  const onSubmit: SubmitHandler<LoginFormData> = (data) => {
-    loginMutation.mutate(data);
+    } catch (err: any) {
+      setError("Login failed. Please check your credentials.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -83,23 +83,17 @@ export default function LoginPage() {
               <p className="text-sm text-red-500">Mobile number is required</p>
             )}
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loginMutation.isPending}
-            >
-              {loginMutation.isPending ? "Logging in..." : "Login"}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Logging in..." : "Login"}
             </Button>
 
-            {loginMutation.isSuccess && (
+            {success && (
               <p className="text-center text-sm text-green-600">
-                ✅ &quot;Login successful&quot;
+                ✅ Login successful
               </p>
             )}
-            {loginMutation.isError && (
-              <p className="text-center text-sm text-red-600">
-                &quot;Login failed&quot;
-              </p>
+            {error && (
+              <p className="text-center text-sm text-red-600">{error}</p>
             )}
           </form>
         </CardContent>

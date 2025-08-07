@@ -1,5 +1,9 @@
+"use client";
+
 import React from "react";
 import { Button } from "../ui/button";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 import { ProductType } from "@/type";
 
 type PropsType = {
@@ -10,91 +14,135 @@ type PropsType = {
   endDate: string;
 };
 
-const CSV = ({
+const StyledExcelExport = ({
   products,
   totalQty,
   totalAmount,
   startDate,
   endDate,
 }: PropsType) => {
-  const downloadCSV = () => {
+  const downloadExcel = async () => {
     if (products.length === 0) return;
 
-    const headers = [
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Sales Report");
+
+    // 🔹 Title Row (merged)
+    const title = `Sales Report (${startDate} to ${endDate})`;
+    sheet.mergeCells("A1", "F1");
+    const titleCell = sheet.getCell("A1");
+    titleCell.value = title;
+    titleCell.font = { size: 16, bold: true };
+    titleCell.alignment = { horizontal: "center", vertical: "middle" };
+
+    // 🔹 Header Row
+    sheet.addRow([
       "Product Name",
       "Price",
       "Qty",
       "Total Cost",
       "Total Sales",
       "Total Revenue",
-      `From ${startDate} To ${endDate}`,
-    ];
+    ]);
+    const headerRow = sheet.getRow(2);
+    headerRow.eachCell((cell) => {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "1E3A8A" }, // Indigo-800
+      };
+      cell.font = { color: { argb: "FFFFFF" }, bold: true };
+      cell.alignment = { horizontal: "center" };
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
+    });
 
-    // Helper: calculate total cost
-    const totalCost = products.reduce(
-      (acc, product) => acc + product.item.purchase_price * product.total_qty,
-      0
-    );
-
-    const rows = products.map((product) => {
+    // 🔹 Data Rows
+    products.forEach((product) => {
       const cost = product.item.purchase_price * product.total_qty;
       const revenue = product.total_amount - cost;
 
-      return [
+      const row = sheet.addRow([
         product.item?.item_name ?? "Unnamed",
         product.item?.sales_price ?? 0,
         product.total_qty ?? 0,
         cost,
         product.total_amount ?? 0,
         revenue,
-        "",
-      ];
+      ]);
+
+      row.eachCell((cell) => {
+        cell.alignment = { horizontal: "center" };
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+      });
     });
 
-    // Add blank row (optional)
-    rows.push([]);
+    // 🔹 Blank Row
+    sheet.addRow([]);
 
-    // Add total row aligned with the header
-    rows.push([
+    // 🔹 Totals Row
+    const totalCost = products.reduce(
+      (acc, p) => acc + p.item.purchase_price * p.total_qty,
+      0
+    );
+    const totalRevenue = totalAmount - totalCost;
+
+    const totalRow = sheet.addRow([
       "Total",
       "",
       totalQty,
       totalCost,
       totalAmount,
-      totalAmount - totalCost,
-      "", // empty date column
+      totalRevenue,
     ]);
 
-    const csvContent = [headers, ...rows]
-      .map((row) =>
-        row
-          .map((cell) => {
-            if (typeof cell === "string" && cell.includes(",")) {
-              return `"${cell}"`; // wrap in quotes if contains comma
-            }
-            return cell;
-          })
-          .join(",")
-      )
-      .join("\n");
-
-    const blob = new Blob(["\uFEFF" + csvContent], {
-      type: "application/vnd.ms-excel;charset=utf-8;",
+    totalRow.eachCell((cell, colNumber) => {
+      cell.font = { bold: true };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FDE68A" }, // Amber-300
+      };
+      cell.alignment = { horizontal: "center" };
+      cell.border = {
+        top: { style: "medium" },
+        left: { style: "medium" },
+        bottom: { style: "medium" },
+        right: { style: "medium" },
+      };
     });
-    const url = URL.createObjectURL(blob);
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute(
-      "download",
-      `sales-products_${startDate}_to_${endDate}.xls`
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    sheet.columns?.forEach((column) => {
+      let maxLength = 10;
+
+      if (column.eachCell) {
+        column.eachCell({ includeEmpty: true }, (cell) => {
+          const val = cell.value ? cell.value.toString() : "";
+          maxLength = Math.max(maxLength, val.length);
+        });
+      }
+
+      column.width = maxLength + 2;
+    });
+
+    // 🔹 Export the file
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    saveAs(blob, `Sales_Report_${startDate}_to_${endDate}.xlsx`);
   };
 
-  return <Button onClick={downloadCSV}>Download CSV</Button>;
+  return <Button onClick={downloadExcel}>📄 Download Excel</Button>;
 };
 
-export default CSV;
+export default StyledExcelExport;
