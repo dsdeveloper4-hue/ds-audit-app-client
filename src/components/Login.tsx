@@ -1,15 +1,14 @@
 "use client";
 
 import { useForm, SubmitHandler } from "react-hook-form";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 import api from "@/lib/api";
-import { useAppDispatch } from "@/redux/hook";
+import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { setUser } from "@/redux/slices/authSlice";
 
 interface LoginFormData {
@@ -36,6 +35,13 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const user = useAppSelector((state) => state.auth.user);
+  const isAuthenticated = !!user;
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated]);
 
   const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
     try {
