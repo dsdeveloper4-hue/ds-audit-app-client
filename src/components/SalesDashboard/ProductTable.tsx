@@ -14,8 +14,6 @@ export default function SalesTable({
   products,
   totalQty,
   totalAmount,
-  startDate,
-  endDate,
 }: PropsType) {
   console.log(products[0]);
   return (

@@ -105,7 +105,7 @@ const StyledExcelExport = ({
       totalRevenue,
     ]);
 
-    totalRow.eachCell((cell, colNumber) => {
+    totalRow.eachCell((cell) => {
       cell.font = { bold: true };
       cell.fill = {
         type: "pattern",

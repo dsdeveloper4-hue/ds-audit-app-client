@@ -34,7 +34,7 @@ export default function Navbar() {
       router.push("/login");
     }
     setHasMounted(true);
-  }, []);
+  }, [isAuthenticated]);
 
   const handleLogout = async () => {
     try {

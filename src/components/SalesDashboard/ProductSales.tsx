@@ -14,7 +14,6 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { useAppSelector } from "@/redux/hook";
 import {
   Popover,
   PopoverTrigger,
@@ -41,7 +40,7 @@ export default function SalesPage() {
   const [endDate, setEndDate] = useState<string>(today);
   const [totalQty, setTotalQty] = useState<number>(0);
   const [totalAmount, setTotalAmount] = useState<number>(0);
-  
+
   const [sortBy, setSortBy] = useState<
     "name" | "reversedName" | "qty" | "minQty" | "amount" | "minSales"
   >("name");

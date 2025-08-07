@@ -56,6 +56,7 @@ export default function LoginPage() {
       setSuccess(true);
       router.push("/sales");
     } catch (err: any) {
+      console.log(err);
       setError("Login failed. Please check your credentials.");
     } finally {
       setLoading(false);
