@@ -51,7 +51,6 @@ export default function LoginPage() {
 
       const { user } = res.data;
 
-      // Save user in Redux state instead of localStorage
       dispatch(setUser(user));
 
       setSuccess(true);

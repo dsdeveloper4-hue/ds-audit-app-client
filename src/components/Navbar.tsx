@@ -34,6 +34,7 @@ export default function Navbar() {
     try {
       await api.post("/api/auth/logout");
       dispatch(logoutUser());
+      localStorage.removeItem("reduxState"); // Clear persisted state
       queryClient.setQueryData(["auth-status"], null);
       queryClient.invalidateQueries({ queryKey: ["auth-status"] });
       router.push("/login");
