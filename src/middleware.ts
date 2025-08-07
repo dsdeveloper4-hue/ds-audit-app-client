@@ -5,7 +5,7 @@ const VERIFY_ENDPOINT = process.env.AUTH_VERIFY_URL!;
 
 export async function middleware(req: NextRequest) {
   const token = req.cookies.get("Auth_Token")?.value;
-  console.log(token);
+  console.log("This is supposed to be Auth_token", token);
   const pathname = req.nextUrl.pathname;
 
   if (!token && pathname === "/login") {
