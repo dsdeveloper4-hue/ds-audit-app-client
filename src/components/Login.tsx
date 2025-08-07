@@ -16,6 +16,7 @@ interface LoginFormData {
 }
 
 interface UserType {
+  token: string;
   user: {
     userId: string;
     role: number;
@@ -33,18 +34,23 @@ export default function LoginPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  // ✅ Mutation with proper typing
   const loginMutation = useMutation({
-    mutationFn: async (data: LoginFormData): Promise<UserType> => {
+    mutationFn: async (
+      data: LoginFormData
+    ): Promise<{ user: UserType["user"]; token: string }> => {
       const res = await api.post("api/auth/login", data, {
         withCredentials: true,
       });
       return res.data;
     },
-    onSuccess: ({ user }) => {
+    onSuccess: ({ user, token }) => {
       queryClient.invalidateQueries({ queryKey: ["auth-status"] });
       localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("token", token); // ✅ Store token in localStorage
       router.push("/sales");
+    },
+    onError: (error) => {
+      console.error("Login Error:", error); // Optional: Keep for debugging
     },
   });
 
