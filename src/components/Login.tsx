@@ -46,7 +46,6 @@ export default function LoginPage() {
     onSuccess: ({ user, token }) => {
       queryClient.invalidateQueries({ queryKey: ["auth-status"] });
       localStorage.setItem("user", JSON.stringify(user));
-      localStorage.setItem("token", token); // ✅ Store token in localStorage
       router.push("/sales");
     },
     onError: (error) => {
