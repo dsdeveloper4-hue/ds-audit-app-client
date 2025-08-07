@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 import api from "@/lib/api";
+import { useAppDispatch } from "@/redux/hook";
+import { setUser } from "@/redux/slices/authSlice";
 
 interface LoginFormData {
   username: string;
@@ -27,6 +29,7 @@ export default function LoginPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormData>();
+  const dispatch = useAppDispatch();
 
   const router = useRouter();
 
@@ -47,7 +50,10 @@ export default function LoginPage() {
       );
 
       const { user } = res.data;
-      localStorage.setItem("user", JSON.stringify(user));
+
+      // Save user in Redux state instead of localStorage
+      dispatch(setUser(user));
+
       setSuccess(true);
       router.push("/sales");
     } catch (err: any) {

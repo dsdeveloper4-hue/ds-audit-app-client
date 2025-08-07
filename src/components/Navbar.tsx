@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import { HiOutlineMenu, HiOutlineX } from "react-icons/hi";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,35 +17,23 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FaUserCircle } from "react-icons/fa";
 import api from "@/lib/api";
-
-type UserType = {
-  userId: string;
-  role: number;
-  name: string;
-};
+import { useAppDispatch, useAppSelector } from "@/redux/hook";
+import { logoutUser } from "@/redux/slices/authSlice"; // Adjust path if needed
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const [user, setUser] = useState<UserType | null>(null);
-  const [loading, setLoading] = useState(true);
-
+  const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  useEffect(() => {
-    // Try to get user from localStorage on mount
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
-  }, []);
+  const user = useAppSelector((state) => state.auth.user);
+  const isAuthenticated = !!user;
+  const userName = user?.name;
 
   const handleLogout = async () => {
     try {
       await api.post("/api/auth/logout");
-      localStorage.removeItem("user");
-      setUser(null);
+      dispatch(logoutUser());
       queryClient.setQueryData(["auth-status"], null);
       queryClient.invalidateQueries({ queryKey: ["auth-status"] });
       router.push("/login");
@@ -54,9 +41,6 @@ export default function Navbar() {
       console.error("Logout failed:", err);
     }
   };
-
-  const isAuthenticated = !!user;
-  const userName = user?.name;
 
   return (
     <nav className="bg-white fixed top-0 left-0 w-full z-50 shadow-sm border-b">
@@ -85,7 +69,7 @@ export default function Navbar() {
             </>
           )}
 
-          {loading ? (
+          {user === undefined ? (
             <Skeleton className="h-8 w-24 rounded-md" />
           ) : isAuthenticated ? (
             <DropdownMenu>
@@ -151,7 +135,7 @@ export default function Navbar() {
               </>
             )}
 
-            {loading ? (
+            {user === undefined ? (
               <Skeleton className="h-8 w-20 rounded-md" />
             ) : isAuthenticated ? (
               <>
