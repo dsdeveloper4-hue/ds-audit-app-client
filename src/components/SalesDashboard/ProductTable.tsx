@@ -15,7 +15,6 @@ export default function SalesTable({
   totalQty,
   totalAmount,
 }: PropsType) {
-  console.log(products[0]);
   return (
     <Card className="p-4 border shadow-sm rounded-2xl">
       <ScrollArea className="h-[60vh]">
