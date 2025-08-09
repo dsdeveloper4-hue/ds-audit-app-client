@@ -41,7 +41,7 @@ export default function LoginPage() {
     if (isAuthenticated) {
       router.push("/");
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated,router]);
 
   const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
     try {
@@ -62,6 +62,7 @@ export default function LoginPage() {
       setSuccess(true);
       router.push("/sales");
     } catch (err: any) {
+      console.log(err)
       setError("Login failed. Invalid Username or Password!");
     } finally {
       setLoading(false);

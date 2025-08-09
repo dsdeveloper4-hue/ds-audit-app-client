@@ -15,7 +15,7 @@ type SortOption =
   | "reversedName"
   | "qty"
   | "minQty"
-  | "amount"
+  | "mostSales"
   | "minSales";
 
 type PropsType = {
@@ -41,7 +41,7 @@ const ProductSorting = ({ sortBy, setSortBy }: PropsType) => {
           <SelectItem value="reversedName">Z-A (Name)</SelectItem>
           <SelectItem value="qty">Most Quantity</SelectItem>
           <SelectItem value="minQty">Min Quantity</SelectItem>
-          <SelectItem value="amount">Most Sales</SelectItem>
+          <SelectItem value="mostSales">Most Sales</SelectItem>
           <SelectItem value="minSales">Min Sales</SelectItem>
         </SelectContent>
       </Select>

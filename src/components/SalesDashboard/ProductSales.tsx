@@ -20,6 +20,7 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import ProductSorting from "./ProductSorting";
+import useIsAuthenticated from "@/hooks/isAuthenticated";
 
 const fetchAllProducts = async ({
   queryKey,
@@ -36,14 +37,16 @@ const fetchAllProducts = async ({
 const today = format(new Date(), "yyyy-MM-dd");
 // const july15 = format(new Date(2025, 6, 15), "yyyy-MM-dd");
 export default function SalesPage() {
+  useIsAuthenticated();
+
   const [startDate, setStartDate] = useState<string>(today);
   const [endDate, setEndDate] = useState<string>(today);
   const [totalQty, setTotalQty] = useState<number>(0);
   const [totalAmount, setTotalAmount] = useState<number>(0);
 
   const [sortBy, setSortBy] = useState<
-    "name" | "reversedName" | "qty" | "minQty" | "amount" | "minSales"
-  >("name");
+    "name" | "reversedName" | "qty" | "minQty" | "mostSales"| "minSales"
+  >("mostSales");
 
   const {
     data: products = [],
@@ -58,8 +61,6 @@ export default function SalesPage() {
   });
 
   useEffect(() => {
-
-
     if (products.length) {
       const qty = products.reduce((sum, p) => sum + p.total_qty, 0);
       const amount = products.reduce((sum, p) => sum + p.total_amount, 0);
@@ -78,7 +79,7 @@ export default function SalesPage() {
       return b.item.item_name.localeCompare(a.item.item_name);
     if (sortBy === "qty") return b.total_qty - a.total_qty;
     if (sortBy === "minQty") return a.total_qty - b.total_qty;
-    if (sortBy === "amount") return b.total_amount - a.total_amount;
+    if (sortBy === "mostSales") return b.total_amount - a.total_amount;
     if (sortBy === "minSales") return a.total_amount - b.total_amount;
 
     return 0;
