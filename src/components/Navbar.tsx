@@ -37,12 +37,14 @@ export default function Navbar() {
   }, [isAuthenticated, router]);
 
   const handleLogout = async () => {
+    dispatch(clearUser());
+    localStorage.removeItem("reduxState");
+    queryClient.setQueryData(["auth-status"], null);
+    queryClient.invalidateQueries({ queryKey: ["auth-status"] });
     try {
       await api.post("/api/auth/logout");
       dispatch(clearUser());
-      localStorage.removeItem("reduxState");
-      queryClient.setQueryData(["auth-status"], null);
-      queryClient.invalidateQueries({ queryKey: ["auth-status"] });
+     
       router.push("/login");
     } catch (err) {
       console.error("Logout failed:", err);

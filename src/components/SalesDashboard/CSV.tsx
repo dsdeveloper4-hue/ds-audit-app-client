@@ -23,14 +23,16 @@ const StyledExcelExport = ({
 }: PropsType) => {
   const exelSheetName =
     startDate === endDate ? `${startDate}` : `${startDate}_to_${endDate}`;
+
   const downloadExcel = async () => {
     if (products.length === 0) return;
 
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Sales Report");
 
-    // ✅ Professional table column definitions
+    // ✅ Professional table column definitions with Serial Number
     sheet.columns = [
+      { header: "SL", key: "sl", width: 6 },
       { header: "Product Name", key: "name", width: 20 },
       { header: "Price", key: "price", width: 12 },
       { header: "Qty", key: "qty", width: 10 },
@@ -40,17 +42,17 @@ const StyledExcelExport = ({
     ];
 
     // 🔹 Title Row
-    // 🔹 Title Row
     const title = `Sales Report ${exelSheetName}`;
-    sheet.mergeCells("A1", "F1");
+    sheet.mergeCells("A1", "G1"); // updated range because of SL column
     const titleCell = sheet.getCell("A1");
     titleCell.value = title;
     titleCell.font = { size: 16, bold: true };
     titleCell.alignment = { horizontal: "center", vertical: "middle" };
     sheet.getRow(1).height = 25;
 
-    // ✅ Add the actual header row values (Row 2)
+    // ✅ Add header row
     const headerRow = sheet.addRow([
+      "SL",
       "Product Name",
       "Price",
       "Qty",
@@ -60,7 +62,7 @@ const StyledExcelExport = ({
     ]);
     headerRow.height = 22;
 
-    // 🔹 Style the header row
+    // 🔹 Style header row
     headerRow.eachCell((cell) => {
       cell.fill = {
         type: "pattern",
@@ -77,12 +79,13 @@ const StyledExcelExport = ({
       };
     });
 
-    // 🔹 Data Rows with zebra striping
+    // 🔹 Data Rows with serial numbers
     products.forEach((product, index) => {
       const cost = product.item.purchase_price * product.total_qty;
       const revenue = product.total_amount - cost;
 
       const row = sheet.addRow({
+        sl: index + 1,
         name: product.item?.item_name ?? "Unnamed",
         price: product.item?.sales_price ?? 0,
         qty: product.total_qty ?? 0,
@@ -94,7 +97,7 @@ const StyledExcelExport = ({
       row.height = 20;
       row.eachCell((cell, colNumber) => {
         cell.alignment = {
-          horizontal: colNumber === 1 ? "left" : "center",
+          horizontal: colNumber === 2 ? "left" : "center", // Product Name column is left aligned
           vertical: "middle",
         };
         cell.border = {
@@ -107,7 +110,7 @@ const StyledExcelExport = ({
           cell.fill = {
             type: "pattern",
             pattern: "solid",
-            fgColor: { argb: "E5E7EB" }, // medium-light gray
+            fgColor: { argb: "E5E7EB" },
           };
         }
       });
@@ -124,6 +127,7 @@ const StyledExcelExport = ({
     const totalRevenue = totalAmount - totalCost;
 
     const totalRow = sheet.addRow({
+      sl: "",
       name: "Total",
       price: "",
       qty: totalQty,
@@ -149,14 +153,14 @@ const StyledExcelExport = ({
       };
     });
 
-    // ✅ Auto-adjust widths based on content (min 12, max 30)
+    // ✅ Auto-adjust column widths
     sheet.columns.forEach((column) => {
       let maxLength = column.header?.toString().length ?? 10;
       column.eachCell?.({ includeEmpty: true }, (cell) => {
         const val = cell.value ? cell.value.toString() : "";
         maxLength = Math.max(maxLength, val.length);
       });
-      column.width = Math.min(Math.max(maxLength + 2, 12), 30);
+      column.width = Math.min(Math.max(maxLength + 2, 6), 30);
     });
 
     // 🔹 Export
