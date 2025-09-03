@@ -1,25 +1,16 @@
 "use client";
 
 import { useForm, SubmitHandler } from "react-hook-form";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
-import api from "@/lib/api";
-import { useAppDispatch, useAppSelector } from "@/redux/hook";
-import { setUser } from "@/redux/slices/authSlice";
 
 interface LoginFormData {
   username: string;
   mobile: string;
-}
-
-interface UserType {
-  userId: string;
-  role: number;
-  name: string;
 }
 
 export default function LoginPage() {
@@ -28,45 +19,27 @@ export default function LoginPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormData>();
-  const dispatch = useAppDispatch();
-
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const user = useAppSelector((state) => state.auth.user);
-  const isAuthenticated = !!user;
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push("/");
-    }
-  }, [isAuthenticated,router]);
 
-  const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
-    try {
-      setLoading(true);
-      setError(null);
-      setSuccess(false);
+  const onSubmit: SubmitHandler<LoginFormData> = (data) => {
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
 
-      const res = await api.post<{ user: UserType; token: string }>(
-        "/api/auth/login",
-        data,
-        { withCredentials: true }
-      );
-
-      const { user } = res.data;
-
-      dispatch(setUser(user));
-
-      setSuccess(true);
-      router.push("/sales");
-    } catch (err: any) {
-      console.log(err)
-      setError("Login failed. Invalid Username or Password!");
-    } finally {
+    // Hardcoded login logic
+    setTimeout(() => {
       setLoading(false);
-    }
+      if (data.username === "admin" && data.mobile === "1234567890") {
+        setSuccess(true);
+        router.push("/sales"); // redirect on success
+      } else {
+        setError("Login failed. Invalid Username or Mobile!");
+      }
+    }, 1000);
   };
 
   return (

@@ -1,57 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { HiOutlineMenu, HiOutlineX } from "react-icons/hi";
 import { motion, AnimatePresence } from "framer-motion";
-
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { FaUserCircle } from "react-icons/fa";
-import api from "@/lib/api";
-import { useAppDispatch, useAppSelector } from "@/redux/hook";
-import { clearUser } from "@/redux/slices/authSlice";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
-  const dispatch = useAppDispatch();
-  const user = useAppSelector((state) => state.auth.user);
-  const isAuthenticated = !!user;
-  const userName = user?.name;
-  const queryClient = useQueryClient();
   const router = useRouter();
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login");
-    }
-    setHasMounted(true);
-  }, [isAuthenticated, router]);
 
-  const handleLogout = async () => {
-    dispatch(clearUser());
-    localStorage.removeItem("reduxState");
-    queryClient.setQueryData(["auth-status"], null);
-    queryClient.invalidateQueries({ queryKey: ["auth-status"] });
-    try {
-      await api.post("/api/auth/logout");
-      dispatch(clearUser());
-     
-      router.push("/login");
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
+  // Simulate mounted state to avoid hydration mismatch
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  // Hardcoded user/auth state
+  const isAuthenticated = true; // change to false to test unauthenticated state
+
+  // Logout handler (hardcoded)
+  const handleLogout = () => {
+    // Replace this with real logout logic later
+    console.log("User logged out");
+    router.push("/login");
   };
 
-  // Render loading skeleton during SSR to avoid hydration mismatch
   if (!hasMounted) {
     return (
       <nav className="bg-white fixed top-0 left-0 w-full z-50 shadow-sm border-b">
@@ -60,7 +35,7 @@ export default function Navbar() {
             Digital Seba
           </Link>
           <div className="hidden md:flex items-center gap-6">
-            <Skeleton className="h-8 w-24 rounded-md" />
+            <div className="h-8 w-24 bg-gray-200 rounded-md animate-pulse" />
           </div>
           <div className="md:hidden">
             <button
@@ -89,74 +64,15 @@ export default function Navbar() {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-10 font-semibold text-gray-700 select-none">
-          {isAuthenticated && (
-            <div className="flex gap-10">
-              <Link
-                href="/"
-                className="relative group transition-colors duration-300 hover:text-blue-600"
-              >
-                Home
-                <span
-                  className="absolute left-0 -bottom-1 w-0 h-[2px] bg-blue-600 transition-all duration-300 group-hover:w-full"
-                  aria-hidden="true"
-                />
-              </Link>
-              <Link
-                href="/sales"
-                className="relative group transition-colors duration-300 hover:text-blue-600"
-              >
-                Sales Dashboard
-                <span
-                  className="absolute left-0 -bottom-1 w-0 h-[2px] bg-blue-600 transition-all duration-300 group-hover:w-full"
-                  aria-hidden="true"
-                />
-              </Link>
-            </div>
-          )}
-
           {/* User Auth Controls */}
-          {user === undefined ? (
-            <Skeleton className="h-10 w-28 rounded-md" />
-          ) : user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-3 text-gray-700 hover:text-blue-600 transition-colors duration-300 focus:ring-2 focus:ring-blue-400 focus:outline-none rounded"
-                >
-                  <FaUserCircle className="text-2xl" />
-                  <span className="capitalize">{userName}</span>
-                  <svg
-                    className="w-4 h-4 ml-1 text-gray-400 group-hover:text-blue-600 transition-colors duration-300"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="shadow-lg rounded-md border border-gray-200"
-              >
-                <DropdownMenuItem
-                  onClick={handleLogout}
-                  className="hover:bg-red-600 hover:text-white transition-colors duration-200"
-                >
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          {isAuthenticated ? (
+            <div className="flex items-center gap-3">
+              <Button variant="default" size="sm" onClick={handleLogout}>
+                Logout
+              </Button>
+            </div>
           ) : (
-            <Link href="/login" aria-label="Login">
+            <Link href="/login">
               <Button className="bg-blue-600 text-white hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 transition rounded px-6 py-2 font-semibold">
                 Login
               </Button>
@@ -188,42 +104,19 @@ export default function Navbar() {
           >
             {isAuthenticated && (
               <>
-                <Link
-                  href="/"
-                  onClick={() => setOpen(false)}
-                  className="block text-gray-700 font-semibold hover:text-blue-600 transition-colors duration-300"
-                >
-                  Home
-                </Link>
-                <Link
-                  href="/sales"
-                  onClick={() => setOpen(false)}
-                  className="block text-gray-700 font-semibold hover:text-blue-600 transition-colors duration-300"
-                >
-                  Sales Dashboard
-                </Link>
+                <div className="mt-3 flex items-center justify-between">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </Button>
+                </div>
               </>
             )}
-
-            {user === undefined ? (
-              <Skeleton className="h-10 w-24 rounded-md" />
-            ) : isAuthenticated ? (
-              <>
-                <div className="flex items-center gap-3 text-gray-700 font-semibold mt-3">
-                  <FaUserCircle className="text-xl" />
-                  <span className="capitalize">{userName}</span>
-                </div>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="mt-3 w-full"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </Button>
-              </>
-            ) : (
-              <Link href="/login" aria-label="Login">
+            {!isAuthenticated && (
+              <Link href="/login">
                 <Button size="sm" className="w-full">
                   Login
                 </Button>

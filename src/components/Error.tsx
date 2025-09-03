@@ -23,7 +23,7 @@ const ErrorPage = () => {
           d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
         ></path>
       </svg>
-      <p className="text-lg font-semibold">❌ Failed to load products.</p>
+      <p className="text-lg font-semibold"> Failed to load products.</p>
       <p className="text-center text-sm text-red-400">
         Please check your internet connection or try again later.
       </p>

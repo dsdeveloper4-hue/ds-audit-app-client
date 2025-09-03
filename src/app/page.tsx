@@ -1,10 +1,6 @@
-"use client"; 
+"use client";
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
-import useIsAuthenticated from "@/hooks/isAuthenticated";
-
 export default function Home() {
-  useIsAuthenticated();
-
   return (
     <MaxWidthWrapper>
       <div className="flex flex-col justify-center items-center fixed top-0 left-0 right-0 bottom-0 bg-gradient-to-br from-blue-50 via-white to-blue-100 text-center px-4">
