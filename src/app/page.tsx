@@ -1,8 +1,7 @@
 "use client";
-import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 export default function Home() {
   return (
-    <MaxWidthWrapper>
+    <>
       <div className="flex flex-col justify-center items-center fixed top-0 left-0 right-0 bottom-0 bg-gradient-to-br from-blue-50 via-white to-blue-100 text-center px-4">
         <h1 className="text-4xl sm:text-5xl font-bold text-blue-800 mb-4">
           Hey, welcome to <span className="text-blue-600">Digital Seba</span>
@@ -12,6 +11,6 @@ export default function Home() {
           how we can help your digital journey.
         </p>
       </div>
-    </MaxWidthWrapper>
+    </>
   );
 }

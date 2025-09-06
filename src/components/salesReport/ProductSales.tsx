@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import CSV from "./CSV";
 import Loading from "../Loading";
-import ErrorPage from "../Error";
+import ErrorPage from "../shared/Error";
 import ProductTable from "./ProductTable";
 import { ProductType } from "@/type";
 import { useEffect, useState } from "react";

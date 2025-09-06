@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 
 interface LoginFormData {
   username: string;
@@ -43,7 +42,7 @@ export default function LoginPage() {
   };
 
   return (
-    <MaxWidthWrapper className="flex items-center justify-center min-h-[80vh]">
+    <div className="flex items-center justify-center min-h-[80vh]">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-center text-2xl">🔐 Login</CardTitle>
@@ -83,6 +82,6 @@ export default function LoginPage() {
           </form>
         </CardContent>
       </Card>
-    </MaxWidthWrapper>
+    </div>
   );
 }
