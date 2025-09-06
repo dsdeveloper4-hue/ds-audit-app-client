@@ -1,30 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import FormWrapper from "@/components/forms/FormWrapper";
 import FormInput from "@/components/forms/FormInput";
 import { loginSchema, LoginFormData } from "@/schemas/loginSchema";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useLoginMutation } from "@/redux/features/auth/authApi";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [login, { isLoading }] = useLoginMutation();
 
-  const handleLogin = (data: LoginFormData) => {
-    setLoading(true);
+  const handleLogin = async (data: LoginFormData) => {
     setError(null);
-
-    setTimeout(() => {
-      setLoading(false);
-      if (data.username === "admin" && data.mobile === "1234567890") {
-        router.push("/sales");
-      } else {
-        setError("Invalid username or mobile number");
-      }
-    }, 1000);
+    try {
+      const res = await login(data).unwrap();
+      console.log(res);
+      // router.push("/dashboard"); // redirect after login
+    } catch (err: any) {
+      setError(err?.data?.message || "Login failed");
+    }
   };
 
   return (
@@ -49,16 +48,17 @@ export default function LoginPage() {
             <FormWrapper
               schema={loginSchema}
               onSubmit={handleLogin}
-              submitLabel={loading ? "Logging in..." : "Login"}
               className="bg-white dark:bg-gray-900"
+              defaultValues={{ username: "saju", mobile: "01617134236" }}
             >
-              {(control) => (
+              {(control, handleSubmit) => (
                 <>
                   <FormInput
                     name="username"
                     label="Username"
                     placeholder="Enter your username"
                     control={control}
+                    type="text"
                   />
                   <FormInput
                     name="mobile"
@@ -69,10 +69,20 @@ export default function LoginPage() {
                   />
 
                   {error && (
-                    <p className="text-red-600 text-center text-sm font-medium mt-2">
+                    <p className="text-red-600 text-sm font-medium mt-2">
                       {error}
                     </p>
                   )}
+
+                  {/* Submit Button */}
+                  <Button
+                    type="submit"
+                    onClick={(e) => handleSubmit(e as any)}
+                    className="w-full py-3 text-lg mt-4"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Logging in..." : "Login"}
+                  </Button>
                 </>
               )}
             </FormWrapper>

@@ -1,35 +1,31 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  useForm,
-  SubmitHandler,
-  FieldValues,
-  Controller,
-} from "react-hook-form";
+import { useForm, SubmitHandler, DefaultValues } from "react-hook-form";
 import { ZodType, z } from "zod";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-
 type FormWrapperProps<T extends ZodType<any, any>> = {
   schema: T;
   onSubmit: (values: z.infer<T>) => void;
-  children: (control: any) => React.ReactNode; // render props to pass control
-  submitLabel?: string;
+  children: (
+    control: any,
+    handleSubmit: SubmitHandler<z.infer<T>>
+  ) => React.ReactNode;
   className?: string;
+  defaultValues?: DefaultValues<z.infer<T>>; // optional & correct type
 };
 
 export default function FormWrapper<T extends ZodType<any, any>>({
   schema,
   onSubmit,
   children,
-  submitLabel = "Submit",
   className,
+  defaultValues,
 }: FormWrapperProps<T>) {
   const form = useForm<z.infer<T>>({
     resolver: zodResolver(schema) as any,
-    defaultValues: {} as z.infer<T>,
+    defaultValues,
   });
 
   const handleSubmit: SubmitHandler<z.infer<T>> = (values) => onSubmit(values);
@@ -43,10 +39,7 @@ export default function FormWrapper<T extends ZodType<any, any>>({
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          {children(form.control)}
-          <Button type="submit" className="w-full py-3 text-lg">
-            {submitLabel}
-          </Button>
+          {children(form.control, form.handleSubmit(handleSubmit))}
         </form>
       </Form>
     </motion.div>

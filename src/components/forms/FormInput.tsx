@@ -32,7 +32,12 @@ export default function FormInput<T extends FieldValues>({
         <FormItem>
           <FormLabel>{label}</FormLabel>
           <FormControl>
-            <Input {...field} type={type} placeholder={placeholder} />
+            <Input
+              {...field}
+              type={type}
+              placeholder={placeholder}
+              value={field.value ?? ""} // <-- Ensures controlled input
+            />
           </FormControl>
           {fieldState.error && (
             <FormMessage>{fieldState.error.message}</FormMessage>
