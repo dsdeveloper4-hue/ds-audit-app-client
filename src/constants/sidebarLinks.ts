@@ -1,10 +1,15 @@
-
 // constants/sidebarLinks.ts
-import { Home, Users, Settings } from "lucide-react";
+import { BarChart3, FileText } from "lucide-react";
 
 export const sidebarLinks = [
-  { title: "Dashboard", href: "/dashboard", icon: Home },
-  { title: "Users", href: "/users", icon: Users },
-  { title: "Settings", href: "/settings", icon: Settings },
+  {
+    title: "Sales Report",
+    href: "/sales-report",
+    icon: FileText,
+  },
+  {
+    title: "Product Graph",
+    href: "/product-graph",
+    icon: BarChart3,
+  },
 ];
-

@@ -14,7 +14,7 @@ export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const NavItems = ({ onItemClick }: { onItemClick?: () => void }) => (
-    <nav className="space-y-2 overflow-y-auto">
+    <nav>
       {sidebarLinks.map((link) => {
         const Icon = link.icon;
         const isActive = pathname === link.href;
@@ -25,8 +25,8 @@ export default function Sidebar() {
             asChild
             variant={isActive ? "default" : "ghost"}
             className={cn(
-              "w-full justify-start gap-2 rounded-xl px-3 py-2 text-base",
-              isActive && "shadow-md"
+              "w-full rounded-none px-4 py-2 justify-start text-base", // full width, square, clean
+              isActive && "bg-primary text-primary-foreground font-medium"
             )}
           >
             <Link
@@ -64,7 +64,7 @@ export default function Sidebar() {
           "bg-white dark:bg-gray-900 border-r shadow-sm"
         )}
       >
-        <div className="w-full h-full flex flex-col p-4">
+        <div className="w-full h-full flex flex-col ">
           <NavItems />
         </div>
       </aside>
