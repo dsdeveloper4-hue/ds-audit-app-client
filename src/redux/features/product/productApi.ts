@@ -1,23 +1,24 @@
 import baseApi from "@/redux/api/baseApi";
-import { TProductSalesRecord } from "@/types";
+import { TProductSalesRecord, TResponse } from "@/types";
 
 const productApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // ✅ Fetch products within a date range
-    getProducts: builder.query<
-      TProductSalesRecord[],
-      { startDate: string; endDate: string }
-    >({
-      query: ({ startDate, endDate }) => ({
-        url: "reports/products/sales-report",
-        params: { startDate, endDate },
+    getProducts:
+      builder.query <
+      TResponse<TProductSalesRecord[]>, { startDate: string; endDate: string }>({
+        query: ({ startDate, endDate }) => ({
+          url: "reports/products/sales-report",
+          params: { startDate, endDate },
+        }),
+        onQueryStarted(arg, { queryFulfilled }) {
+          queryFulfilled.then(({ data }) => {
+            console.log("Products fetched inside API:", data);
+          });
+        },
+        providesTags: ["Products"],
       }),
-      transformResponse: (response: { products: TProductSalesRecord[] }) =>
-        response.products,
-      providesTags: ["Products"],
-    }),
   }),
-  overrideExisting: false,
 });
 
 export const { useGetProductsQuery } = productApi;

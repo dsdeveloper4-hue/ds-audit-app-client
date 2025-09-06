@@ -4,7 +4,7 @@ import CSV from "./CSV";
 import ErrorPage from "../shared/Error";
 import ProductTable from "./ProductTable";
 import ProductSorting from "./ProductSorting";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { CalendarIcon } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { motion } from "framer-motion";
@@ -17,6 +17,7 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { useGetProductsQuery } from "@/redux/features/product/productApi";
+import { TProductSalesRecord, TResponse } from "@/types";
 
 const today = format(new Date(), "yyyy-MM-dd");
 const may10 = format(new Date(new Date().getFullYear(), 4, 10), "yyyy-MM-dd");
@@ -33,37 +34,44 @@ export default function SalesPage() {
 
   // ✅ Fetch products with RTK Query
   const {
-    data: products = [],
+    data: response,
     isLoading,
     error,
-  } = useGetProductsQuery({
-    startDate,
-    endDate,
-  });
+  } = useGetProductsQuery({ startDate, endDate });
+  const products: TProductSalesRecord[] = response?.data || [];
 
+  // Calculate totals whenever products change
   useEffect(() => {
     if (products.length) {
-      const qty = products.reduce((sum, p) => sum + p.total_qty, 0);
-      const amount = products.reduce((sum, p) => sum + p.total_amount, 0);
-      setTotalQty(qty);
-      setTotalAmount(amount);
+      setTotalQty(products.reduce((sum, p) => sum + p.total_qty, 0));
+      setTotalAmount(products.reduce((sum, p) => sum + p.total_amount, 0));
     } else {
       setTotalQty(0);
       setTotalAmount(0);
     }
   }, [products]);
 
-  const sortedProducts = [...products].sort((a, b) => {
-    if (sortBy === "name")
-      return a.item.item_name.localeCompare(b.item.item_name);
-    if (sortBy === "reversedName")
-      return b.item.item_name.localeCompare(a.item.item_name);
-    if (sortBy === "qty") return b.total_qty - a.total_qty;
-    if (sortBy === "minQty") return a.total_qty - b.total_qty;
-    if (sortBy === "mostSales") return b.total_amount - a.total_amount;
-    if (sortBy === "minSales") return a.total_amount - b.total_amount;
-    return 0;
-  });
+  // Sort products based on selected criteria
+  const sortedProducts = useMemo(() => {
+    return [...products].sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return a.item.item_name.localeCompare(b.item.item_name);
+        case "reversedName":
+          return b.item.item_name.localeCompare(a.item.item_name);
+        case "qty":
+          return b.total_qty - a.total_qty;
+        case "minQty":
+          return a.total_qty - b.total_qty;
+        case "mostSales":
+          return b.total_amount - a.total_amount;
+        case "minSales":
+          return a.total_amount - b.total_amount;
+        default:
+          return 0;
+      }
+    });
+  }, [products, sortBy]);
 
   return (
     <motion.div
