@@ -1,9 +1,9 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
-import { ProductType } from "@/type";
+import { TProductSalesRecord } from "@/types";
 
 type PropsType = {
-  products: ProductType[];
+  products: TProductSalesRecord[];
   totalQty: number;
   totalAmount: number;
   startDate: string;

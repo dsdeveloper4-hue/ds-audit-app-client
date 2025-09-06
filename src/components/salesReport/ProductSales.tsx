@@ -1,12 +1,9 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import api from "@/lib/api";
 import CSV from "./CSV";
-import Loading from "../Loading";
 import ErrorPage from "../shared/Error";
 import ProductTable from "./ProductTable";
-import { ProductType } from "@/type";
+import ProductSorting from "./ProductSorting";
 import { useEffect, useState } from "react";
 import { CalendarIcon } from "lucide-react";
 import { format, parseISO } from "date-fns";
@@ -19,45 +16,29 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
-import ProductSorting from "./ProductSorting";
-import useIsAuthenticated from "@/hooks/isAuthenticated";
-
-const fetchAllProducts = async ({
-  queryKey,
-}: {
-  queryKey: [string, { startDate: string; endDate: string }];
-}): Promise<ProductType[]> => {
-  const [, { startDate, endDate }] = queryKey;
-  const res = await api.get(`/api/product-dashboard`, {
-    params: { startDate, endDate },
-  });
-  return res.data.products;
-};
+import { useGetProductsQuery } from "@/redux/features/product/productApi";
 
 const today = format(new Date(), "yyyy-MM-dd");
-// const july15 = format(new Date(2025, 6, 15), "yyyy-MM-dd");
-export default function SalesPage() {
-  useIsAuthenticated();
+const may10 = format(new Date(new Date().getFullYear(), 4, 10), "yyyy-MM-dd");
 
-  const [startDate, setStartDate] = useState<string>(today);
+export default function SalesPage() {
+  const [startDate, setStartDate] = useState<string>(may10);
   const [endDate, setEndDate] = useState<string>(today);
   const [totalQty, setTotalQty] = useState<number>(0);
   const [totalAmount, setTotalAmount] = useState<number>(0);
 
   const [sortBy, setSortBy] = useState<
-    "name" | "reversedName" | "qty" | "minQty" | "mostSales"| "minSales"
+    "name" | "reversedName" | "qty" | "minQty" | "mostSales" | "minSales"
   >("mostSales");
 
+  // ✅ Fetch products with RTK Query
   const {
     data: products = [],
     isLoading,
     error,
-  } = useQuery({
-    queryKey: ["sales-products", { startDate, endDate }],
-    queryFn: fetchAllProducts,
-    staleTime: 1000 * 60 * 5,
-    refetchOnWindowFocus: false,
-    enabled: !!startDate && !!endDate,
+  } = useGetProductsQuery({
+    startDate,
+    endDate,
   });
 
   useEffect(() => {
@@ -81,7 +62,6 @@ export default function SalesPage() {
     if (sortBy === "minQty") return a.total_qty - b.total_qty;
     if (sortBy === "mostSales") return b.total_amount - a.total_amount;
     if (sortBy === "minSales") return a.total_amount - b.total_amount;
-
     return 0;
   });
 
@@ -160,12 +140,6 @@ export default function SalesPage() {
 
             {/* Sorting Dropdown */}
             <ProductSorting sortBy={sortBy} setSortBy={setSortBy} />
-
-            {/* <SelectedProduct
-              selectedFilters={selectedFilters}
-              setSelectedFilters={setSelectedFilters}
-              products={sortedProducts}
-            /> */}
           </div>
 
           {/* CSV Button */}
@@ -182,7 +156,7 @@ export default function SalesPage() {
       </Card>
 
       {/* Table / Loading / Error */}
-      {isLoading && <Loading />}
+      {isLoading && <p>Loading...</p>}
       {error && <ErrorPage />}
       {!isLoading && !error && (
         <ProductTable

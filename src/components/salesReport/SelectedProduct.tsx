@@ -5,12 +5,12 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { Button } from "../ui/button";
-import { ProductType } from "@/type";
+import { TProductSalesRecord } from "@/types";
 
 type PropType = {
   selectedFilters: string[];
   setSelectedFilters: Dispatch<SetStateAction<string[]>>;
-  products: ProductType[];
+  products: TProductSalesRecord[];
 };
 const SelectedProduct = ({
   selectedFilters,

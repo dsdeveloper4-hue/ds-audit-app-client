@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import FormWrapper from "@/components/forms/FormWrapper";
@@ -9,18 +9,26 @@ import { loginSchema, LoginFormData } from "@/schemas/loginSchema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLoginMutation } from "@/redux/features/auth/authApi";
+import { useAppDispatch } from "@/redux/hook";
+import { setUser } from "@/redux/features/auth/authSlice";
+import { verifyToken } from "@/utils/verifyToken";
 
 export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [login, { isLoading }] = useLoginMutation();
-
+  const dispatch = useAppDispatch();
   const handleLogin = async (data: LoginFormData) => {
     setError(null);
     try {
       const res = await login(data).unwrap();
-      console.log(res);
-      // router.push("/dashboard"); // redirect after login
+      dispatch(
+        setUser({
+          user: verifyToken(res.data.accessToken),
+          token: res.data.accessToken,
+        })
+      );
+      router.push("/"); // redirect after login
     } catch (err: any) {
       setError(err?.data?.message || "Login failed");
     }

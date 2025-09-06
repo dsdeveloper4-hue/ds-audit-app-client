@@ -4,10 +4,10 @@ import React from "react";
 import { Button } from "../ui/button";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
-import { ProductType } from "@/type";
+import { TProductSalesRecord } from "@/types";
 
 type PropsType = {
-  products: ProductType[];
+  products: TProductSalesRecord[];
   totalQty: number;
   totalAmount: number;
   startDate: string;
