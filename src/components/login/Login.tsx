@@ -1,87 +1,90 @@
 "use client";
 
-import { useForm, SubmitHandler } from "react-hook-form";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-interface LoginFormData {
-  username: string;
-  mobile: string;
-}
+import { motion } from "framer-motion";
+import FormWrapper from "@/components/forms/FormWrapper";
+import FormInput from "@/components/forms/FormInput";
+import { loginSchema, LoginFormData } from "@/schemas/loginSchema";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function LoginPage() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormData>();
   const router = useRouter();
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
-  const onSubmit: SubmitHandler<LoginFormData> = (data) => {
+  const handleLogin = (data: LoginFormData) => {
     setLoading(true);
     setError(null);
-    setSuccess(false);
 
-    // Hardcoded login logic
     setTimeout(() => {
       setLoading(false);
       if (data.username === "admin" && data.mobile === "1234567890") {
-        setSuccess(true);
-        router.push("/sales"); // redirect on success
+        router.push("/sales");
       } else {
-        setError("Login failed. Invalid Username or Mobile!");
+        setError("Invalid username or mobile number");
       }
     }, 1000);
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[80vh]">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl">🔐 Login</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <Input
-              {...register("username", { required: true })}
-              type="text"
-              placeholder="Username"
-            />
-            {errors.username && (
-              <p className="text-sm text-red-500">Username is required</p>
-            )}
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
+      >
+        <Card className="shadow-lg rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden py-0">
+          {/* Header */}
+          <div className="bg-indigo-600 dark:bg-indigo-500 text-white text-center py-8 px-6">
+            <h1 className="text-3xl font-bold">Digital Seba</h1>
+            <p className="mt-2 text-sm opacity-90">
+              Welcome back! Please login to continue
+            </p>
+          </div>
 
-            <Input
-              {...register("mobile", { required: true })}
-              type="tel"
-              placeholder="Mobile Number"
-            />
-            {errors.mobile && (
-              <p className="text-sm text-red-500">Mobile number is required</p>
-            )}
+          {/* Form */}
+          <CardContent className="p-6">
+            <FormWrapper
+              schema={loginSchema}
+              onSubmit={handleLogin}
+              submitLabel={loading ? "Logging in..." : "Login"}
+              className="bg-white dark:bg-gray-900"
+            >
+              {(control) => (
+                <>
+                  <FormInput
+                    name="username"
+                    label="Username"
+                    placeholder="Enter your username"
+                    control={control}
+                  />
+                  <FormInput
+                    name="mobile"
+                    label="Mobile Number"
+                    placeholder="Enter 10-digit mobile number"
+                    type="tel"
+                    control={control}
+                  />
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Logging in..." : "Login"}
-            </Button>
+                  {error && (
+                    <p className="text-red-600 text-center text-sm font-medium mt-2">
+                      {error}
+                    </p>
+                  )}
+                </>
+              )}
+            </FormWrapper>
 
-            {success && (
-              <p className="text-center text-sm text-green-600">
-                ✅ Login successful
-              </p>
-            )}
-            {error && (
-              <p className="text-center text-sm text-red-600">{error}</p>
-            )}
-          </form>
-        </CardContent>
-      </Card>
+            {/* Footer */}
+            <p className="mt-4 text-center text-gray-500 text-sm">
+              &copy; {new Date().getFullYear()} Digital Seba. All rights
+              reserved.
+            </p>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }
