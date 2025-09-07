@@ -1,19 +1,21 @@
-import type { Metadata } from "next";
-
 import Sidebar from "@/components/shared/Sidebar";
 import Navbar from "@/components/shared/Navbar";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
-
-export const metadata: Metadata = {
-  title: "DIGITAL SEBA",
-  description: "This is product dashboard.",
-};
-
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // ✅ Read cookies on the server
+  const cookieStore = await cookies()
+  const token =  cookieStore.get("refreshToken")?.value;
+  // ✅ Redirect if no token
+  if (!token) {
+    redirect("/login");
+  }
+
   return (
     <>
       {/* Top Navbar */}

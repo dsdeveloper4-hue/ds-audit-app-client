@@ -10,9 +10,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DIGITAL SEBA",
-  description: "This is product dashboard.",
+  title: {
+    default: "Digital Seba",
+    template: "%s | Digital Seba",
+  },
+  description:
+    "Digital Seba is a modern platform that helps you manage products, track sales, and access digital services through a secure dashboard.",
 };
+
 
 export default function RootLayout({
   children,
