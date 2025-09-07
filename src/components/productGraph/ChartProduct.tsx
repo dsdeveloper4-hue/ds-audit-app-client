@@ -13,6 +13,7 @@ import {
 } from "@/redux/features/product/productApi";
 import { TProduct } from "@/types";
 import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
 
 const today = format(new Date(), "yyyy-MM-dd");
 const may10 = format(new Date(new Date().getFullYear(), 4, 10), "yyyy-MM-dd");
@@ -39,6 +40,9 @@ export default function ProductChartPage() {
   const [startDate, setStartDate] = useState<string>(may10);
   const [endDate, setEndDate] = useState<string>(today);
 
+  // View mode: "qty" or "amount"
+  const [viewMode, setViewMode] = useState<"qty" | "amount">("qty");
+
   // Fetch sales data
   const { data: salesResponse } = useGetProductSalesReportByIDQuery(
     selectedProductId && startDate && endDate
@@ -61,15 +65,23 @@ export default function ProductChartPage() {
 
   // Chart
   const chartData = {
-    labels: salesData.map((d) => format(new Date(d.date), "dd MMM yyyy")), // ✅ show each day
+    labels: salesData.map((d) => format(new Date(d.date), "dd/MM")), // simplified date
     datasets: [
       {
-        label: "Sales Amount",
-        data: salesData.map((d) => d.totalAmount),
-        backgroundColor: "rgba(59, 130, 246, 0.7)",
-        borderColor: "rgb(59, 130, 246)",
+        label: viewMode === "qty" ? "Quantity" : "Amount (৳)",
+        data: salesData.map((d) =>
+          viewMode === "qty" ? d.totalQty : d.totalAmount
+        ),
+        backgroundColor:
+          viewMode === "qty"
+            ? "rgba(29, 78, 216, 0.9)" // Blue
+            : "rgba(5, 150, 105, 0.9)", // Green
+        borderColor:
+          viewMode === "qty"
+            ? "rgb(29, 78, 216)" // Blue
+            : "rgb(5, 150, 105)", // Green
         borderWidth: 1,
-        borderRadius: 4,
+        borderRadius: 6,
       },
     ],
   };
@@ -90,68 +102,81 @@ export default function ProductChartPage() {
   const selectedProduct = products.find((p) => p.id === selectedProductId);
 
   return (
-    <main className="p-6 md:p-10 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6">📊 Product Sales Analytics</h1>
+    <main className="flex flex-col p-6 md:p-10 bg-gray-50 min-h-[80vh] w-[80vw] overflow-hidden">
+      <h1 className="text-3xl font-bold mb-6 flex-shrink-0">
+        📊 Product Sales Analytics
+      </h1>
 
-      {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6 items-start  md:items-start">
-        <ProductSelect
-          products={products}
-          selectedProductId={selectedProductId}
-          setSelectedProductId={(value) => setSelectedProductId(Number(value))}
-        />
-        <DateRangePicker
-          startDate={startDate}
-          endDate={endDate}
-          setStartDate={setStartDate}
-          setEndDate={setEndDate}
-        />
+      {/* Filters + Toggle */}
+      <div className="flex flex-col md:flex-row gap-4 mb-6 items-start md:items-center justify-between flex-shrink-0">
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+          <ProductSelect
+            products={products}
+            selectedProductId={selectedProductId}
+            setSelectedProductId={(value) =>
+              setSelectedProductId(Number(value))
+            }
+          />
+          <DateRangePicker
+            startDate={startDate}
+            endDate={endDate}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+          />
+        </div>
+
+        <Button
+          onClick={() => setViewMode(viewMode === "qty" ? "amount" : "qty")}
+          className="bg-gray-800 text-white hover:bg-gray-900 transition-colors flex-shrink-0"
+        >
+          View: {viewMode === "qty" ? "Total Quantity" : "Total Amount"}
+        </Button>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      {/* Summary Card */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 flex-shrink-0">
         <Card className="shadow-md rounded-2xl border border-gray-200">
           <CardContent>
-            <h2 className="text-gray-500 font-medium mb-2">Total Quantity</h2>
-            <p className="text-2xl font-bold">{totalQty}</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-md rounded-2xl border border-gray-200">
-          <CardContent>
-            <h2 className="text-gray-500 font-medium mb-2">Total Amount</h2>
+            <h2 className="text-gray-500 font-medium mb-2">
+              {viewMode === "qty" ? "Total Quantity" : "Total Amount"}
+            </h2>
             <p className="text-2xl font-bold">
-              ৳ {totalAmount.toLocaleString()}
+              {viewMode === "qty"
+                ? totalQty
+                : `৳ ${totalAmount.toLocaleString()}`}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Chart */}
-      <motion.div
-        key={`${selectedProductId}-${startDate}-${endDate}`}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        <Card className="shadow-lg rounded-2xl">
-          <CardHeader>
-            <CardTitle>
-              {selectedProduct?.item_name || "Product"} Sales
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {chartData.labels.length > 0 ? (
-              <div className="w-full h-[350px] md:h-[400px]">
-                <Bar data={chartData} options={chartOptions} />
-              </div>
-            ) : (
-              <p className="text-center py-20 text-gray-400">
-                No sales data available for this date range.
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
+    {/* Chart */}
+<motion.div
+  key={`${selectedProductId}-${startDate}-${endDate}-${viewMode}`}
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.4 }}
+  className="flex-1 overflow-hidden"
+>
+  <Card className="shadow-lg rounded-2xl h-full">
+    <CardHeader>
+      <CardTitle>
+        {selectedProduct?.item_name || "Product"} Sales
+      </CardTitle>
+    </CardHeader>
+    <CardContent className="h-[32vh] "> {/* increased height */}
+      {chartData.labels.length > 0 ? (
+        <div className="w-full h-full">
+          <Bar data={chartData} options={chartOptions} />
+        </div>
+      ) : (
+        <p className="text-center py-20 text-gray-400">
+          No sales data available for this date range.
+        </p>
+      )}
+    </CardContent>
+  </Card>
+</motion.div>
+
     </main>
   );
 }
