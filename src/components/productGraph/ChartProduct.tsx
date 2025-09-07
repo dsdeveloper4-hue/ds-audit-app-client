@@ -11,7 +11,6 @@ import {
   useGetAllProductsQuery,
   useGetProductSalesReportByIDQuery,
 } from "@/redux/features/product/productApi";
-import { TProduct } from "@/types";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 
@@ -19,13 +18,18 @@ const today = format(new Date(), "yyyy-MM-dd");
 const may10 = format(new Date(new Date().getFullYear(), 4, 10), "yyyy-MM-dd");
 
 export default function ProductChartPage() {
-  // Products
+  // Fetch products
   const {
     data: productsResponse,
     isLoading,
     isError,
   } = useGetAllProductsQuery();
-  const products: TProduct[] = productsResponse?.data || [];
+
+  // Memoize products to avoid unnecessary useEffect triggers
+  const products = useMemo(
+    () => productsResponse?.data || [],
+    [productsResponse]
+  );
   const [selectedProductId, setSelectedProductId] = useState<number | null>(
     null
   );
@@ -51,7 +55,8 @@ export default function ProductChartPage() {
     { skip: !selectedProductId }
   );
 
-  const salesData = salesResponse?.data || [];
+  // Memoize salesData to avoid unnecessary recalculations
+  const salesData = useMemo(() => salesResponse?.data || [], [salesResponse]);
 
   // Totals
   const totalQty = useMemo(
@@ -63,38 +68,44 @@ export default function ProductChartPage() {
     [salesData]
   );
 
-  // Chart
-  const chartData = {
-    labels: salesData.map((d) => format(new Date(d.date), "dd/MM")), // simplified date
-    datasets: [
-      {
-        label: viewMode === "qty" ? "Quantity" : "Amount (৳)",
-        data: salesData.map((d) =>
-          viewMode === "qty" ? d.totalQty : d.totalAmount
-        ),
-        backgroundColor:
-          viewMode === "qty"
-            ? "rgba(29, 78, 216, 0.9)" // Blue
-            : "rgba(5, 150, 105, 0.9)", // Green
-        borderColor:
-          viewMode === "qty"
-            ? "rgb(29, 78, 216)" // Blue
-            : "rgb(5, 150, 105)", // Green
-        borderWidth: 1,
-        borderRadius: 6,
-      },
-    ],
-  };
+  // Chart configuration
+  const chartData = useMemo(
+    () => ({
+      labels: salesData.map((d) => format(new Date(d.date), "dd/MM")),
+      datasets: [
+        {
+          label: viewMode === "qty" ? "Quantity" : "Amount (৳)",
+          data: salesData.map((d) =>
+            viewMode === "qty" ? d.totalQty : d.totalAmount
+          ),
+          backgroundColor:
+            viewMode === "qty"
+              ? "rgba(29, 78, 216, 0.9)" // Blue
+              : "rgba(5, 150, 105, 0.9)", // Green
+          borderColor:
+            viewMode === "qty"
+              ? "rgb(29, 78, 216)" // Blue
+              : "rgb(5, 150, 105)", // Green
+          borderWidth: 1,
+          borderRadius: 6,
+        },
+      ],
+    }),
+    [salesData, viewMode]
+  );
 
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false }, title: { display: false } },
-    scales: {
-      x: { grid: { display: false } },
-      y: { beginAtZero: true },
-    },
-  };
+  const chartOptions = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, title: { display: false } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { beginAtZero: true },
+      },
+    }),
+    []
+  );
 
   if (isLoading) return <p>Loading products...</p>;
   if (isError) return <p>Failed to load products.</p>;
@@ -149,34 +160,33 @@ export default function ProductChartPage() {
         </Card>
       </div>
 
-    {/* Chart */}
-<motion.div
-  key={`${selectedProductId}-${startDate}-${endDate}-${viewMode}`}
-  initial={{ opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.4 }}
-  className="flex-1 overflow-hidden"
->
-  <Card className="shadow-lg rounded-2xl h-full">
-    <CardHeader>
-      <CardTitle>
-        {selectedProduct?.item_name || "Product"} Sales
-      </CardTitle>
-    </CardHeader>
-    <CardContent className="h-[32vh] "> {/* increased height */}
-      {chartData.labels.length > 0 ? (
-        <div className="w-full h-full">
-          <Bar data={chartData} options={chartOptions} />
-        </div>
-      ) : (
-        <p className="text-center py-20 text-gray-400">
-          No sales data available for this date range.
-        </p>
-      )}
-    </CardContent>
-  </Card>
-</motion.div>
-
+      {/* Chart */}
+      <motion.div
+        key={`${selectedProductId}-${startDate}-${endDate}-${viewMode}`}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="flex-1 overflow-hidden"
+      >
+        <Card className="shadow-lg rounded-2xl h-full">
+          <CardHeader>
+            <CardTitle>
+              {selectedProduct?.item_name || "Product"} Sales
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="h-[32vh]">
+            {chartData.labels.length > 0 ? (
+              <div className="w-full h-full">
+                <Bar data={chartData} options={chartOptions} />
+              </div>
+            ) : (
+              <p className="text-center py-20 text-gray-400">
+                No sales data available for this date range.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
     </main>
   );
 }

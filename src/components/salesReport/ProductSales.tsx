@@ -10,7 +10,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { useGetProductsRecordsQuery } from "@/redux/features/product/productApi";
 import { TProductSalesRecord } from "@/types";
-import DateRangePicker from "../shared/DateRangePicker"; // ✅ new reusable component
+import DateRangePicker from "../shared/DateRangePicker";
 
 const today = format(new Date(), "yyyy-MM-dd");
 const may10 = format(new Date(new Date().getFullYear(), 4, 10), "yyyy-MM-dd");
@@ -25,13 +25,21 @@ export default function SalesPage() {
     "name" | "reversedName" | "qty" | "minQty" | "mostSales" | "minSales"
   >("mostSales");
 
-  // ✅ Fetch products with RTK Query
+  // Fetch products with RTK Query
   const {
     data: response,
     isLoading,
     error,
-  } = useGetProductsRecordsQuery({ startDate, endDate });
-  const products: TProductSalesRecord[] = response?.data || [];
+  } = useGetProductsRecordsQuery({
+    startDate,
+    endDate,
+  });
+
+  // Memoize products to avoid unnecessary useEffect / useMemo triggers
+  const products = useMemo<TProductSalesRecord[]>(
+    () => response?.data || [],
+    [response]
+  );
 
   // Calculate totals whenever products change
   useEffect(() => {
@@ -77,7 +85,7 @@ export default function SalesPage() {
       <Card className="mb-6 shadow-md border border-muted rounded-2xl">
         <CardContent className="px-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            {/* ✅ Reusable DateRangePicker */}
+            {/* DateRangePicker */}
             <DateRangePicker
               startDate={startDate}
               endDate={endDate}

@@ -20,12 +20,14 @@ const baseQuery = fetchBaseQuery({
   },
 });
 
+// Use `unknown` instead of `{}` for extraOptions
 const baseQueryWithRefreshToken = async (
   args: FetchArgs,
   api: BaseQueryApi,
-  extraOptions: {}
+  extraOptions: unknown
 ) => {
-  let result = await baseQuery(args, api, extraOptions);
+  let result = await baseQuery(args, api, extraOptions as any); // cast to any for fetchBaseQuery
+
   if (result?.error?.status) {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh-token`,
@@ -37,6 +39,7 @@ const baseQueryWithRefreshToken = async (
 
     const data = await res.json();
     const accessToken = data?.data?.accessToken;
+
     if (accessToken) {
       api.dispatch(
         setUser({
@@ -45,7 +48,7 @@ const baseQueryWithRefreshToken = async (
         })
       );
 
-      result = await baseQuery(args, api, extraOptions);
+      result = await baseQuery(args, api, extraOptions as any);
     } else {
       api.dispatch(logout());
     }
@@ -57,7 +60,7 @@ const baseQueryWithRefreshToken = async (
 const baseApi = createApi({
   reducerPath: "baseApi",
   baseQuery: baseQueryWithRefreshToken,
-  endpoints: (builder) => ({}),
+  endpoints: () => ({}), // remove unused `builder`
   tagTypes: ["Products"],
 });
 
