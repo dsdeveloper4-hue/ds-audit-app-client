@@ -16,7 +16,7 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
-import { useGetProductsQuery } from "@/redux/features/product/productApi";
+import { useGetProductsRecordsQuery } from "@/redux/features/product/productApi";
 import { TProductSalesRecord, TResponse } from "@/types";
 
 const today = format(new Date(), "yyyy-MM-dd");
@@ -37,7 +37,7 @@ export default function SalesPage() {
     data: response,
     isLoading,
     error,
-  } = useGetProductsQuery({ startDate, endDate });
+  } = useGetProductsRecordsQuery({ startDate, endDate });
   const products: TProductSalesRecord[] = response?.data || [];
 
   // Calculate totals whenever products change
