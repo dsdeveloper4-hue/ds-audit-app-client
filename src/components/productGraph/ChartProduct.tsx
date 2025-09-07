@@ -1,21 +1,19 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bar } from "react-chartjs-2";
-import "@/lib/chartSetup";
+import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import ProductSelect from "../shared/AllProductsDropdown";
 import DateRangePicker from "../shared/DateRangePicker";
+import ReusableBarChart from "../shared/ReusableBarChart";
 import {
   useGetAllProductsQuery,
   useGetProductSalesReportByIDQuery,
 } from "@/redux/features/product/productApi";
-import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
 
+// Default dates
 const today = format(new Date(), "yyyy-MM-dd");
-const may10 = format(new Date(new Date().getFullYear(), 4, 10), "yyyy-MM-dd");
 
 export default function ProductChartPage() {
   // Fetch products
@@ -25,26 +23,35 @@ export default function ProductChartPage() {
     isError,
   } = useGetAllProductsQuery();
 
-  // Memoize products to avoid unnecessary useEffect triggers
+  // Memoize products
   const products = useMemo(
     () => productsResponse?.data || [],
     [productsResponse]
   );
+
+  // Selected product
   const [selectedProductId, setSelectedProductId] = useState<number | null>(
     null
   );
 
   useEffect(() => {
     if (products.length && selectedProductId === null) {
-      setSelectedProductId(products[0].id);
+      // ✅ Try to set product with id = 9 as default
+      const defaultProduct = products.find((p) => p.id === 9);
+      if (defaultProduct) {
+        setSelectedProductId(defaultProduct.id);
+      } else {
+        // fallback to first product
+        setSelectedProductId(products[0].id);
+      }
     }
   }, [products, selectedProductId]);
 
   // Date range
-  const [startDate, setStartDate] = useState<string>(may10);
+  const [startDate, setStartDate] = useState<string>(today);
   const [endDate, setEndDate] = useState<string>(today);
 
-  // View mode: "qty" or "amount"
+  // View mode
   const [viewMode, setViewMode] = useState<"qty" | "amount">("qty");
 
   // Fetch sales data
@@ -55,7 +62,7 @@ export default function ProductChartPage() {
     { skip: !selectedProductId }
   );
 
-  // Memoize salesData to avoid unnecessary recalculations
+  // Memoize sales data
   const salesData = useMemo(() => salesResponse?.data || [], [salesResponse]);
 
   // Totals
@@ -68,52 +75,13 @@ export default function ProductChartPage() {
     [salesData]
   );
 
-  // Chart configuration
-  const chartData = useMemo(
-    () => ({
-      labels: salesData.map((d) => format(new Date(d.date), "dd/MM")),
-      datasets: [
-        {
-          label: viewMode === "qty" ? "Quantity" : "Amount (৳)",
-          data: salesData.map((d) =>
-            viewMode === "qty" ? d.totalQty : d.totalAmount
-          ),
-          backgroundColor:
-            viewMode === "qty"
-              ? "rgba(29, 78, 216, 0.9)" // Blue
-              : "rgba(5, 150, 105, 0.9)", // Green
-          borderColor:
-            viewMode === "qty"
-              ? "rgb(29, 78, 216)" // Blue
-              : "rgb(5, 150, 105)", // Green
-          borderWidth: 1,
-          borderRadius: 6,
-        },
-      ],
-    }),
-    [salesData, viewMode]
-  );
-
-  const chartOptions = useMemo(
-    () => ({
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false }, title: { display: false } },
-      scales: {
-        x: { grid: { display: false } },
-        y: { beginAtZero: true },
-      },
-    }),
-    []
-  );
-
   if (isLoading) return <p>Loading products...</p>;
   if (isError) return <p>Failed to load products.</p>;
 
   const selectedProduct = products.find((p) => p.id === selectedProductId);
 
   return (
-    <main className="flex flex-col p-6 md:p-10 bg-gray-50 min-h-[80vh] w-[80vw] overflow-hidden">
+    <main className="flex flex-col  bg-gray-50 max-h-[90vh] w-[75vw] overflow-x-hidden">
       <h1 className="text-3xl font-bold mb-6 flex-shrink-0">
         📊 Product Sales Analytics
       </h1>
@@ -145,7 +113,7 @@ export default function ProductChartPage() {
       </div>
 
       {/* Summary Card */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 flex-shrink-0">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 flex-shrink-0">
         <Card className="shadow-md rounded-2xl border border-gray-200">
           <CardContent>
             <h2 className="text-gray-500 font-medium mb-2">
@@ -160,33 +128,15 @@ export default function ProductChartPage() {
         </Card>
       </div>
 
-      {/* Chart */}
-      <motion.div
-        key={`${selectedProductId}-${startDate}-${endDate}-${viewMode}`}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="flex-1 overflow-hidden"
-      >
-        <Card className="shadow-lg rounded-2xl h-full">
-          <CardHeader>
-            <CardTitle>
-              {selectedProduct?.item_name || "Product"} Sales
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="h-[32vh]">
-            {chartData.labels.length > 0 ? (
-              <div className="w-full h-full">
-                <Bar data={chartData} options={chartOptions} />
-              </div>
-            ) : (
-              <p className="text-center py-20 text-gray-400">
-                No sales data available for this date range.
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
+      {/* Chart Section */}
+      <ReusableBarChart
+        title={`${selectedProduct?.item_name || "Product"} Sales`}
+        labels={salesData.map((d) => format(new Date(d.date), "dd/MM"))}
+        data={salesData.map((d) =>
+          viewMode === "qty" ? d.totalQty : d.totalAmount
+        )}
+        viewMode={viewMode}
+      />
     </main>
   );
 }

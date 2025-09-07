@@ -13,10 +13,9 @@ import { TProductSalesRecord } from "@/types";
 import DateRangePicker from "../shared/DateRangePicker";
 
 const today = format(new Date(), "yyyy-MM-dd");
-const may10 = format(new Date(new Date().getFullYear(), 4, 10), "yyyy-MM-dd");
 
 export default function SalesPage() {
-  const [startDate, setStartDate] = useState<string>(may10);
+  const [startDate, setStartDate] = useState<string>(today);
   const [endDate, setEndDate] = useState<string>(today);
   const [totalQty, setTotalQty] = useState<number>(0);
   const [totalAmount, setTotalAmount] = useState<number>(0);

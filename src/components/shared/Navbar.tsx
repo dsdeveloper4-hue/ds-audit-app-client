@@ -1,7 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { logout } from "@/redux/features/auth/authSlice";
+import { useLogoutMutation } from "@/redux/features/auth/authApi";
+import { logout as logoutAction } from "@/redux/features/auth/authSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { LogOut, User } from "lucide-react";
 import Link from "next/link";
@@ -11,10 +12,19 @@ export default function Navbar() {
   const user = useAppSelector((state) => state.auth.user);
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const handleLogout = () => {
-    dispatch(logout());
-    router.push("/login");
+
+  const [logoutApi, { isLoading }] = useLogoutMutation(); // ✅ RTK query hook
+
+  const handleLogout = async () => {
+    try {
+      await logoutApi().unwrap(); // ✅ call backend logout API
+      dispatch(logoutAction()); // ✅ clear Redux auth state
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
+
   return (
     <nav className="fixed top-0 left-0 right-0 h-16 bg-white dark:bg-gray-900 border-b shadow-sm z-50 flex items-center justify-between px-6">
       {/* Brand / Logo */}
@@ -40,11 +50,12 @@ export default function Navbar() {
         <Button
           variant="outline"
           size="sm"
+          disabled={isLoading}
           className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950"
           onClick={handleLogout}
         >
           <LogOut className="h-4 w-4" />
-          Logout
+          {isLoading ? "Logging out..." : "Logout"}
         </Button>
       </div>
     </nav>

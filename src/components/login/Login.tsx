@@ -57,7 +57,6 @@ export default function LoginPage() {
               schema={loginSchema}
               onSubmit={handleLogin}
               className="bg-white dark:bg-gray-900"
-              defaultValues={{ username: "saju", mobile: "01617134236" }}
             >
               {(control, handleSubmit) => (
                 <>
