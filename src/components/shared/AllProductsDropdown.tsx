@@ -1,6 +1,12 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import { TProduct } from "@/types";
 
 interface ProductSelectProps {
@@ -16,6 +22,7 @@ export default function ProductSelect({
 }: ProductSelectProps) {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
+
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Sort products A-Z by default
@@ -23,18 +30,16 @@ export default function ProductSelect({
     return [...products].sort((a, b) => a.item_name.localeCompare(b.item_name));
   }, [products]);
 
-  // Filter and prioritize search matches
+  // Filter products based on search
   const filteredProducts = useMemo(() => {
     if (!search) return sortedProducts;
     const lowerSearch = search.toLowerCase();
-    return [...sortedProducts].sort((a, b) => {
-      const aMatch = a.item_name.toLowerCase().includes(lowerSearch) ? 0 : 1;
-      const bMatch = b.item_name.toLowerCase().includes(lowerSearch) ? 0 : 1;
-      return aMatch - bMatch;
-    });
+    return sortedProducts.filter((p) =>
+      p.item_name.toLowerCase().includes(lowerSearch)
+    );
   }, [search, sortedProducts]);
 
-  // Close dropdown on click outside
+  // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -48,43 +53,58 @@ export default function ProductSelect({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const selectedProductName =
+    selectedProductId &&
+    products.find((p) => p.id === selectedProductId)?.item_name;
+
   return (
-    <div className="mb-6 w-72 relative" ref={containerRef}>
-      <input
-        type="text"
-        className="w-full border p-2 rounded"
-        placeholder="Search product..."
-        value={search}
-        onChange={(e) => {
-          setSearch(e.target.value);
-          setOpen(true);
-        }}
-        onFocus={() => setOpen(true)}
-      />
+    <div className="w-72 flex flex-col gap-1" ref={containerRef}>
+      <label className="text-sm font-medium text-muted-foreground">
+        Select product
+      </label>
 
-      {open && filteredProducts.length > 0 && (
-        <ul className="absolute z-10 w-full max-h-60 overflow-y-auto bg-white border rounded shadow">
-          {filteredProducts.map((product) => (
-            <li
-              key={product.id}
-              className="p-2 cursor-pointer hover:bg-gray-100"
-              onClick={() => {
-                setSelectedProductId(product.id);
-                setSearch(product.item_name);
-                setOpen(false);
-              }}
-            >
-              {product.item_name}
-            </li>
-          ))}
-        </ul>
-      )}
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className="w-full justify-start text-left font-normal"
+            onClick={() => setOpen(!open)}
+          >
+            {selectedProductName || "Select product"}
+          </Button>
+        </PopoverTrigger>
 
-      {open && filteredProducts.length === 0 && (
-        <div className="absolute z-10 w-full p-2 bg-white border rounded text-gray-500">
-          No results found
-        </div>
-      )}
+        <PopoverContent className="w-full p-0" align="start">
+          <div className="p-2">
+            <input
+              type="text"
+              placeholder="Search product..."
+              className="w-full border p-2 rounded mb-2"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <ul className="max-h-60 overflow-y-auto">
+              {filteredProducts.length > 0 ? (
+                filteredProducts.map((product) => (
+                  <li
+                    key={product.id}
+                    className="p-2 cursor-pointer hover:bg-gray-100 rounded"
+                    onClick={() => {
+                      setSelectedProductId(product.id);
+                      setSearch(product.item_name);
+                      setOpen(false);
+                    }}
+                  >
+                    {product.item_name}
+                  </li>
+                ))
+              ) : (
+                <li className="p-2 text-gray-500">No results found</li>
+              )}
+            </ul>
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
