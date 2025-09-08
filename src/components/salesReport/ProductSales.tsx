@@ -1,15 +1,16 @@
 "use client";
 
-import CSV from "./CSV";
-import ErrorPage from "../shared/Error";
-import ProductTable from "./ProductTable";
-import ProductSorting from "./ProductSorting";
 import { useEffect, useState, useMemo } from "react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { useGetProductsRecordsQuery } from "@/redux/features/product/productApi";
 import { TProductSalesRecord } from "@/types";
+
+import CSV from "./CSV";
+import ErrorPage from "../shared/Error";
+import ProductTable from "./ProductTable";
+import ProductSorting from "./ProductSorting";
 import DateRangePicker from "../shared/DateRangePicker";
 
 const today = format(new Date(), "yyyy-MM-dd");
@@ -28,19 +29,20 @@ export default function SalesPage() {
   const {
     data: response,
     isLoading,
-    error,
-  } = useGetProductsRecordsQuery({
-    startDate,
-    endDate,
-  });
+    isError,
+    refetch,
+  } = useGetProductsRecordsQuery(
+    { startDate, endDate },
+    { refetchOnMountOrArgChange: true }
+  );
 
-  // Memoize products to avoid unnecessary useEffect / useMemo triggers
+  // Memoize products
   const products = useMemo<TProductSalesRecord[]>(
     () => response?.data || [],
     [response]
   );
 
-  // Calculate totals whenever products change
+  // Calculate totals
   useEffect(() => {
     if (products.length) {
       setTotalQty(products.reduce((sum, p) => sum + p.total_qty, 0));
@@ -51,7 +53,7 @@ export default function SalesPage() {
     }
   }, [products]);
 
-  // Sort products based on selected criteria
+  // Sorting logic
   const sortedProducts = useMemo(() => {
     return [...products].sort((a, b) => {
       switch (sortBy) {
@@ -84,19 +86,15 @@ export default function SalesPage() {
       <Card className="mb-6 shadow-md border border-muted rounded-2xl">
         <CardContent className="px-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            {/* DateRangePicker */}
             <DateRangePicker
               startDate={startDate}
               endDate={endDate}
               setStartDate={setStartDate}
               setEndDate={setEndDate}
             />
-
-            {/* Sorting Dropdown */}
             <ProductSorting sortBy={sortBy} setSortBy={setSortBy} />
           </div>
 
-          {/* CSV Button */}
           <div className="mt-2 md:mt-0">
             <CSV
               products={sortedProducts}
@@ -110,9 +108,20 @@ export default function SalesPage() {
       </Card>
 
       {/* Table / Loading / Error */}
-      {isLoading && <p>Loading...</p>}
-      {error && <ErrorPage />}
-      {!isLoading && !error && (
+      {isLoading && (
+        <p className="text-center text-gray-500 animate-pulse">Loading...</p>
+      )}
+
+      {isError && (
+        <ErrorPage
+          title="Failed to load products"
+          message="We couldn’t fetch the product list. Please try again later."
+          onRetry={() => refetch()}
+          retryLabel="Try Again"
+        />
+      )}
+
+      {!isLoading && !isError && (
         <ProductTable
           products={sortedProducts}
           totalAmount={totalAmount}
