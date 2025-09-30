@@ -63,7 +63,15 @@ export default function ProductSelect({
         Select product
       </label>
 
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover
+        open={open}
+        onOpenChange={(nextOpen) => {
+          setOpen(nextOpen);
+          if (nextOpen) {
+            setSearch("");
+          }
+        }}
+      >
         <PopoverTrigger asChild>
           <Button
             variant="outline"
@@ -91,7 +99,6 @@ export default function ProductSelect({
                     className="p-2 cursor-pointer hover:bg-gray-100 rounded"
                     onClick={() => {
                       setSelectedProductId(product.id);
-                      setSearch(product.item_name);
                       setOpen(false);
                     }}
                   >
