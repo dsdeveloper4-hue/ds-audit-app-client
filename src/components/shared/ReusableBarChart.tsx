@@ -27,7 +27,7 @@ function ReusableBarChart({
   data,
   viewMode = "qty",
   colors,
-  height = "32vh",
+  height = "50vh",
   emptyMessage = "No data available.",
 }: ReusableBarChartProps) {
   const chartData = useMemo(
@@ -77,13 +77,13 @@ function ReusableBarChart({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="flex-1 overflow-hidden"
+      className="flex-1 overflow-hidden "
     >
-      <Card className="shadow-lg rounded-2xl h-full">
+      <Card className={`shadow-lg rounded-2xl  h-[${height}]`}>
         <CardHeader>
           <CardTitle>{title}</CardTitle>
         </CardHeader>
-        <CardContent className={`h-[${height}]`}>
+        <CardContent className={`h-full`}>
           {labels.length > 0 ? (
             <div className="w-full h-full">
               <Bar data={chartData} options={chartOptions} />

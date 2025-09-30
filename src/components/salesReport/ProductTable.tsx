@@ -46,7 +46,7 @@ export default function SalesTable({
               {products.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="text-center py-6 text-muted-foreground bg-gray-50"
                   >
                     No sales data found.

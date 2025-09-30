@@ -18,6 +18,7 @@ import {
   useGetAllProductsQuery,
   useGetProductSalesReportByIDQuery,
 } from "@/redux/features/product/productApi";
+import ErrorPage from "../shared/Error";
 
 // Default date helpers
 const today = new Date();
@@ -148,7 +149,13 @@ export default function ProductChartPage() {
   );
 
   if (isLoading) return <p>Loading products...</p>;
-  if (isError) return <p>Failed to load products.</p>;
+  if (isError) return (
+    <ErrorPage
+      title="Failed to load products"
+      message="We couldn’t fetch the product list. Please try again later."
+      retryLabel="Try Again"
+    />
+  );
 
   const selectedProduct = products.find((p) => p.id === selectedProductId);
 
@@ -256,6 +263,7 @@ export default function ProductChartPage() {
           viewMode === "qty" ? d.totalQty : d.totalAmount
         )}
         viewMode={viewMode}
+        height="50vh"
       />
     </main>
   );

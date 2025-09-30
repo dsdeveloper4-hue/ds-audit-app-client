@@ -36,3 +36,4 @@ export const SALES = [
     ],
   },
 ];
+export const fromDate = new Date("2025-08-15");
