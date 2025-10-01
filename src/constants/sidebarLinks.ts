@@ -1,15 +1,20 @@
 // constants/sidebarLinks.ts
-import { BarChart3, FileText } from "lucide-react";
+import { BarChart3, FileText, Users } from "lucide-react";
 
 export const sidebarLinks = [
   {
-    title: "Sales Report",
-    href: "/sales-report",
-    icon: FileText,
+    title: "Total Sales",
+    href: "/sales-summary",
+    icon: FileText, // summary report
   },
   {
-    title: "Product Graph",
+    title: "Product Sales Graph",
     href: "/product-graph",
-    icon: BarChart3,
+    icon: BarChart3, // graph visualization
+  },
+  {
+    title: "Customer Report",
+    href: "/customer-report",
+    icon: Users, // customers & their purchases
   },
 ];

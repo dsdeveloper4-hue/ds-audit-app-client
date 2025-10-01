@@ -28,7 +28,7 @@ const baseQueryWithRefreshToken = async (
 ) => {
   let result = await baseQuery(args, api, extraOptions as any); // cast to any for fetchBaseQuery
 
-  if (result?.error?.status) {
+  if (result?.error?.status == 401 || result?.error?.status == 401) {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh-token`,
       {
@@ -61,7 +61,7 @@ const baseApi = createApi({
   reducerPath: "baseApi",
   baseQuery: baseQueryWithRefreshToken,
   endpoints: () => ({}), // remove unused `builder`
-  tagTypes: ["Products"],
+  tagTypes: ["Products", "Customers"],
 });
 
 export default baseApi;
