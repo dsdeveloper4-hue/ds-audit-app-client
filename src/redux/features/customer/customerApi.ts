@@ -6,12 +6,27 @@ const customerApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getCustomerRecords: builder.query<
       TResponse<TSalesReport[]>,
-      { startDate: string; endDate: string }
+      Record<string, any> | void
     >({
-      query: ({ startDate, endDate }) => ({
-        url: "sales/report",
-        params: { startDate, endDate },
-      }),
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+
+        if (params) {
+          Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+              if (Array.isArray(value)) {
+                value.forEach((v) => queryParams.append(key, String(v)));
+              } else {
+                queryParams.append(key, String(value));
+              }
+            }
+          });
+        }
+
+        return {
+          url: `sales/report?${queryParams.toString()}`,
+        };
+      },
       providesTags: ["Customers"],
     }),
 
