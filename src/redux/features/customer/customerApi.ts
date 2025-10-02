@@ -5,7 +5,7 @@ import { TResponse, TSalesReport } from "@/types";
 const customerApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getCustomerRecords: builder.query<
-      TResponse<TSalesReport[]>,
+      TResponse<TSalesReport>,
       Record<string, any> | void
     >({
       query: (params) => {

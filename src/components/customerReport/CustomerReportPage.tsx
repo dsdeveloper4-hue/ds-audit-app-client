@@ -11,16 +11,15 @@ import DateRangePicker from "../shared/DateRangePicker";
 import ErrorPage from "../shared/Error";
 import Pagination from "../shared/Pagination";
 import RowsPerPage from "../shared/RowPerPage";
+import { Search } from "lucide-react";
 
 const today = format(new Date(), "yyyy-MM-dd");
 
 export default function CustomerReportPage() {
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
-
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
-
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
@@ -44,79 +43,170 @@ export default function CustomerReportPage() {
     limit,
   });
 
-  const customers = useMemo(() => response?.data || [], [response]);
-  const total = response?.pagination?.total || 0;
+  const customers = useMemo(() => response?.data?.data || [], [response]);
+  const total = response?.data?.pagination?.total || 0;
   const totalPages = Math.ceil(total / limit);
 
-  const handlePageChange = (newPage) => {
+  const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) setPage(newPage);
   };
 
   return (
     <motion.div
-      className="px-4 py-6 mx-auto"
+      className="container  mx-auto "
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      {/* Filters */}
-      <Card className="mb-6 shadow-md border border-muted rounded-2xl">
-        <CardContent className="px-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            {/* Date Range */}
-            <DateRangePicker
-              startDate={startDate}
-              endDate={endDate}
-              setStartDate={setStartDate}
-              setEndDate={setEndDate}
-            />
 
-            {/* Search */}
-            <div className="flex flex-col w-[200px]">
-              <Input
-                placeholder="Search customers..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="h-10 border-blue-200 focus:border-blue-400"
-              />
+
+      {/* Filters Card */}
+      <Card className="mb-6 shadow-sm border-muted/50 rounded-xl">
+        <CardContent className="px-6">
+          <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-end justify-between">
+            {/* Left Section: Date Range */}
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-foreground">
+                  Date Range
+                </label>
+                <DateRangePicker
+                  startDate={startDate}
+                  endDate={endDate}
+                  setStartDate={setStartDate}
+                  setEndDate={setEndDate}
+                />
+              </div>
             </div>
 
-            {/* Limit Selector */}
-            <RowsPerPage limit={limit} setLimit={setLimit} setPage={setPage} />
+            {/* Right Section: Search and Rows */}
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end w-full lg:w-auto">
+              {/* Search Input */}
+              <div className="flex flex-col gap-2 w-full sm:w-64">
+                <label className="text-sm font-medium text-foreground">
+                  Search Customers
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name, ID, or code..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="h-10 pl-10 border-muted-foreground/25 focus:border-primary/50 transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* Rows Per Page */}
+              <div className="flex flex-col gap-2">
+
+                <RowsPerPage
+                  limit={limit}
+                  setLimit={setLimit}
+                  setPage={setPage}
+                />
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Table / Loading / Error */}
-      {isLoading && (
-        <p className="text-center text-gray-500 animate-pulse">Loading...</p>
+      {/* Results Summary */}
+      {!isLoading && !isError && customers.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mb-4 flex items-center justify-between"
+        >
+          <p className="text-sm text-muted-foreground">
+            Showing{" "}
+            <span className="font-medium text-foreground">
+              {(page - 1) * limit + 1}-{Math.min(page * limit, total)}
+            </span>{" "}
+            of <span className="font-medium text-foreground">{total}</span>{" "}
+            customers
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Page <span className="font-medium text-foreground">{page}</span> of{" "}
+            <span className="font-medium text-foreground">{totalPages}</span>
+          </p>
+        </motion.div>
       )}
 
+      {/* Loading State */}
+      {isLoading && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex flex-col items-center justify-center py-12"
+        >
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+          <p className="text-lg font-medium text-foreground">
+            Loading customer data...
+          </p>
+          <p className="text-sm text-muted-foreground mt-2">
+            Please wait while we fetch the latest records
+          </p>
+        </motion.div>
+      )}
+
+      {/* Error State */}
       {isError && (
         <ErrorPage
-          title="Failed to load customers"
-          message="We couldn’t fetch the customer report. Please try again later."
+          title="Failed to load customer data"
+          message="We encountered an issue while fetching the customer report. This might be due to network issues or server problems."
           onRetry={() => refetch()}
-          retryLabel="Try Again"
+          retryLabel="Retry Loading"
         />
       )}
 
+      {/* Success State */}
       {!isLoading && !isError && (
-        <>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
           <CustomerTable
             customers={customers}
             startDate={startDate}
             endDate={endDate}
           />
 
-          <div className="mt-6 flex justify-end">
-            <Pagination
-              page={page}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-sm text-muted-foreground">
+                Total {total} customer{total !== 1 ? "s" : ""} found
+              </div>
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          )}
+        </motion.div>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && !isError && customers.length === 0 && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center justify-center py-16 text-center"
+        >
+          <div className="w-24 h-24 bg-muted/50 rounded-full flex items-center justify-center mb-6">
+            <Search className="w-10 h-10 text-muted-foreground/60" />
           </div>
-        </>
+          <h3 className="text-xl font-semibold text-foreground mb-2">
+            No customers found
+          </h3>
+          <p className="text-muted-foreground max-w-md">
+            No customer records match your current filters. Try adjusting your
+            search criteria, date range, or check back later for new data.
+          </p>
+        </motion.div>
       )}
     </motion.div>
   );

@@ -1,40 +1,20 @@
-export interface TSalesReport {
+import { TPagination } from ".";
+
+export interface TSales {
   id: number;
-  store_id: number;
-  warehouse_id: number;
-  init_code: string;
-  count_id: string;
   sales_code: string;
   reference_no: string;
-  sales_date: string;
-  due_date: any;
-  sales_status: string;
   customer_id: number;
-  other_charges_input: any;
-  other_charges_tax_id: any;
-  other_charges_amt: any;
-  discount_to_all_input: any;
-  discount_to_all_type: string;
-  tot_discount_to_all_amt: any;
-  subtotal: number;
-  round_off: any;
-  grand_total: number;
-  sales_note: string;
+  customer_name: string;
   payment_status: string;
   paid_amount: number;
   created_date: string;
   created_time: string;
-  created_by: string;
-  system_ip: string;
-  system_name: string;
-  company_id: any;
-  pos: any;
-  status: number;
-  return_bit: any;
-  customer_previous_due: any;
-  customer_total_due: any;
-  quotation_id: any;
-  coupon_id: any;
-  coupon_amt: number;
-  invoice_terms: string;
 }
+
+export interface TSalesReport {
+  data: TSales[];
+  pagination: TPagination;
+}
+
+

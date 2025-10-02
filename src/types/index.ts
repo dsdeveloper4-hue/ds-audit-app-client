@@ -7,3 +7,10 @@ export interface TResponse<T> {
   message: string;
   data: T;
 }
+
+export interface TPagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}

@@ -2,14 +2,14 @@
 
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TSalesReport } from "@/types";
-import { Card } from "@/components/ui/card";
+import { TSales } from "@/types";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Wallet, Calendar, User, CreditCard } from "lucide-react";
+import { Wallet, Calendar, User, CreditCard, Receipt } from "lucide-react";
 
 type PropsType = {
-  customers: TSalesReport[];
+  customers: TSales[];
   startDate: string;
   endDate: string;
 };
@@ -19,138 +19,162 @@ const CustomerList: React.FC<PropsType> = ({
   startDate,
   endDate,
 }) => {
+  const totals = React.useMemo(() => {
+    const paidTotal = customers.reduce(
+      (sum, c) => sum + (c.paid_amount ?? 0),
+      0
+    );
+    return { paidTotal };
+  }, [customers]);
+
   return (
-    <Card className="p-4 border shadow-sm rounded-2xl">
-      <ScrollArea className="h-[70vh]">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="flex flex-col divide-y divide-gray-100 dark:divide-gray-800"
-        >
-          <AnimatePresence>
+    <Card className="w-full">
+      <CardHeader className="pb-1">
+        <CardTitle className="text-xl font-semibold flex items-center gap-2">
+          <Receipt className="w-5 h-5" />
+          Customer Sales
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="p-0">
+        <ScrollArea className="h-[40vh] px-6">
+          <AnimatePresence mode="wait">
             {customers.length > 0 ? (
-              customers.map((customer, index) => {
-                const dueAmount =
-                  (customer.grand_total ?? 0) - (customer.paid_amount ?? 0);
-
-                return (
-                  <motion.div
-                    key={customer.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                    className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-4 px-2 hover:bg-gray-50 dark:hover:bg-slate-800/40 transition rounded-xl"
-                  >
-                    {/* Left Side: Customer Info */}
-                    <div className="flex items-start md:items-center gap-4 w-full md:w-2/3">
-                      <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-blue-200 to-blue-400 flex items-center justify-center text-blue-900 font-semibold shadow-inner">
-                        {index + 1}
-                      </div>
-
-                      <div className="flex flex-col min-w-0">
-                        <p className="text-sm text-gray-600 flex items-center gap-1">
-                          <User className="w-4 h-4" /> ID:{" "}
-                          <span className="font-medium text-gray-900">
-                            {customer.customer_id}
-                          </span>
-                        </p>
-                        <p className="text-sm text-gray-600 flex items-center gap-1">
-                          <CreditCard className="w-4 h-4" /> Sales Code:{" "}
-                          <span className="font-semibold">
-                            {customer.sales_code}
-                          </span>
-                        </p>
-                        <p className="text-sm text-gray-600 flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />{" "}
-                          {new Date(customer.sales_date).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Right Side: Amounts & Status */}
-                    <div className="flex flex-wrap gap-3 items-center md:justify-end w-full md:w-auto">
-                      <Badge
-                        variant="outline"
-                        className={`px-3 py-1 text-sm ${
-                          customer.payment_status === "Paid"
-                            ? "bg-green-50 text-green-600 border-green-200"
-                            : "bg-red-50 text-red-600 border-red-200"
-                        }`}
-                      >
-                        {customer.payment_status}
-                      </Badge>
-
-                      <div className="flex flex-col text-right">
-                        <span className="text-blue-700 font-bold text-sm">
-                          ৳ {customer.grand_total?.toLocaleString()}
-                        </span>
-                        <span className="text-green-600 font-semibold text-sm">
-                          Paid: ৳ {customer.paid_amount?.toLocaleString()}
-                        </span>
-                        <span className="text-red-600 font-semibold text-sm">
-                          Due: ৳ {dueAmount.toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })
-            ) : (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="flex flex-col items-center justify-center py-10 text-gray-500"
+                exit={{ opacity: 0 }}
+                className="space-y-3"
               >
-                <Wallet className="w-12 h-12 text-gray-300 mb-4" />
-                <p className="text-lg font-medium">No customer sales found</p>
-                <p className="text-sm">
+                {customers.map((customer, index) => (
+                  <motion.div
+                    key={customer.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2, delay: index * 0.03 }}
+                    className="p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
+                  >
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                      {/* Customer Info */}
+                      <div className="flex items-start gap-4 flex-1 min-w-0">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
+                          {index + 1}
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 flex-1 min-w-0">
+                          <div className="flex items-center gap-2 text-sm">
+                            <User className="w-4 h-4 text-muted-foreground" />
+                            <span className="font-medium">Customer:</span>
+                            <span className="text-foreground truncate">
+                              {customer.customer_name}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2 text-sm">
+                            <CreditCard className="w-4 h-4 text-muted-foreground" />
+                            <span className="font-medium">Sales Code:</span>
+                            <span className="text-foreground font-mono truncate">
+                              {customer.sales_code}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2 text-sm">
+                            <Receipt className="w-4 h-4 text-muted-foreground" />
+                            <span className="font-medium">Reference:</span>
+                            <span className="text-foreground truncate">
+                              {customer.reference_no}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2 text-sm">
+                            <Calendar className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-muted-foreground">
+                              {new Date(
+                                customer.created_date
+                              ).toLocaleDateString()}{" "}
+                              • {customer.created_time}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Status + Paid Amount */}
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4  p-4">
+                        {/* Payment Status Badge */}
+                        <Badge
+                          variant={
+                            customer.payment_status === "Paid"
+                              ? "default"
+                              : "destructive"
+                          }
+                          className="px-3 py-1 text-sm font-medium rounded-full"
+                        >
+                          {customer.payment_status}
+                        </Badge>
+
+                        {/* Payment Info */}
+                        <div className="flex flex-col text-right">
+                          <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                            Paid Amount
+                          </span>
+                          <span
+                            className={`text-xl font-semibold ${
+                              customer.payment_status === "Paid"
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }`}
+                          >
+                            ৳{customer.paid_amount?.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="flex flex-col items-center justify-center py-12 text-center"
+              >
+                <Wallet className="w-16 h-16 text-muted-foreground/40 mb-4" />
+                <h3 className="text-lg font-medium mb-2">
+                  No customer sales found
+                </h3>
+                <p className="text-sm text-muted-foreground">
                   Between <strong>{startDate}</strong> and{" "}
                   <strong>{endDate}</strong>
                 </p>
               </motion.div>
             )}
           </AnimatePresence>
-        </motion.div>
+        </ScrollArea>
 
-        {/* Totals Summary */}
+        {/* Summary */}
         {customers.length > 0 && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="mt-6 bg-blue-50 dark:bg-blue-900 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-inner"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="border-t bg-muted/30 px-6 "
           >
-            <p className="text-lg font-semibold text-blue-700 dark:text-blue-200">
-              Totals:
-            </p>
-            <div className="flex flex-wrap gap-6 md:gap-10">
-              <span className="text-blue-800 dark:text-blue-100 font-bold">
-                Grand Total: ৳{" "}
-                {customers
-                  .reduce((sum, c) => sum + (c.grand_total ?? 0), 0)
-                  .toLocaleString()}
-              </span>
-              <span className="text-green-700 dark:text-green-300 font-bold">
-                Paid: ৳{" "}
-                {customers
-                  .reduce((sum, c) => sum + (c.paid_amount ?? 0), 0)
-                  .toLocaleString()}
-              </span>
-              <span className="text-red-600 dark:text-red-400 font-bold">
-                Due: ৳{" "}
-                {customers
-                  .reduce(
-                    (sum, c) =>
-                      sum + ((c.grand_total ?? 0) - (c.paid_amount ?? 0)),
-                    0
-                  )
-                  .toLocaleString()}
-              </span>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <h4 className="text-lg font-semibold">Summary</h4>
+
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 text-sm">
+                <div className="flex flex-col items-start sm:items-end">
+                  <span className="text-muted-foreground">Total Paid</span>
+                  <span className="text-lg font-bold text-green-600">
+                    ৳{totals.paidTotal.toLocaleString()}
+                  </span>
+                </div>
+              </div>
             </div>
           </motion.div>
         )}
-      </ScrollArea>
+      </CardContent>
     </Card>
   );
 };

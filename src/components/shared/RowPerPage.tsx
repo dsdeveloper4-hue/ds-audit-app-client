@@ -13,11 +13,11 @@ const RowsPerPage: React.FC<RowsPerPageProps> = ({
   limit,
   setLimit,
   setPage,
-  limitOptions = [50, 100, 200, 500, 1000],
+  limitOptions = [10, 50, 100, 200, 500],
 }) => {
   return (
     <div className="flex flex-col min-w-[120px] flex-1">
-      <label className="text-sm text-gray-600 mb-1">Rows per page</label>
+      <label className="text-sm mb-1">Rows per page</label>
       <select
         value={limit}
         onChange={(e) => {
