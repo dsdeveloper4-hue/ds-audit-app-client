@@ -24,9 +24,16 @@ export default function CustomerReportPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  // Debounce search input for 500ms
+  // Debounce search input for 1 second (1000ms)
   useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(search), 500);
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      // Reset to page 1 when search changes
+      if (search !== debouncedSearch) {
+        setPage(1);
+      }
+    }, 500);
+
     return () => clearTimeout(handler);
   }, [search]);
 
@@ -52,15 +59,16 @@ export default function CustomerReportPage() {
     if (newPage >= 1 && newPage <= totalPages) setPage(newPage);
   };
 
+  // Show searching indicator
+  const isSearching = search !== debouncedSearch;
+
   return (
     <motion.div
-      className="container  mx-auto "
+      className="container mx-auto"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-
-
       {/* Filters Card */}
       <Card className="mb-6 shadow-sm border-muted/50 rounded-xl">
         <CardContent className="px-6">
@@ -90,17 +98,25 @@ export default function CustomerReportPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search by name, ID, or code..."
+                    placeholder="Search by Sales Code"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="h-10 pl-10 border-muted-foreground/25 focus:border-primary/50 transition-colors"
                   />
+                  {/* Searching Indicator */}
+                  {isSearching && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                    </div>
+                  )}
                 </div>
+                {isSearching && (
+                  <p className="text-xs text-muted-foreground">Searching...</p>
+                )}
               </div>
 
               {/* Rows Per Page */}
               <div className="flex flex-col gap-2">
-
                 <RowsPerPage
                   limit={limit}
                   setLimit={setLimit}
