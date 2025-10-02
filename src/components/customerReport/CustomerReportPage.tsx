@@ -14,9 +14,10 @@ import RowsPerPage from "../shared/RowPerPage";
 import { Search } from "lucide-react";
 
 const today = format(new Date(), "yyyy-MM-dd");
+const defaultStartDate = format(new Date(2025, 0, 1), "yyyy-MM-dd");
 
 export default function CustomerReportPage() {
-  const [startDate, setStartDate] = useState(today);
+  const [startDate, setStartDate] = useState(defaultStartDate);
   const [endDate, setEndDate] = useState(today);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);

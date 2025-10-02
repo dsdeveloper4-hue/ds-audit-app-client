@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Wallet, Calendar, User, CreditCard, Receipt } from "lucide-react";
+import DownloadPDF from "./DownloadPDF";
 
 type PropsType = {
   customers: TSales[];
@@ -99,8 +100,8 @@ const CustomerList: React.FC<PropsType> = ({
                         </div>
                       </div>
 
-                      {/* Status + Paid Amount */}
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4  p-4">
+                      {/* Status + Paid Amount + Download */}
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-6 w-full lg:w-auto border-t pt-3 sm:border-0 sm:pt-0">
                         {/* Payment Status Badge */}
                         <Badge
                           variant={
@@ -108,25 +109,33 @@ const CustomerList: React.FC<PropsType> = ({
                               ? "default"
                               : "destructive"
                           }
-                          className="px-3 py-1 text-sm font-medium rounded-full"
+                          className="w-fit sm:w-auto px-3 py-1 text-xs sm:text-sm font-medium rounded-full"
                         >
                           {customer.payment_status}
                         </Badge>
 
-                        {/* Payment Info */}
-                        <div className="flex flex-col text-right">
-                          <span className="text-xs uppercase tracking-wide text-muted-foreground">
-                            Paid Amount
-                          </span>
-                          <span
-                            className={`text-xl font-semibold ${
-                              customer.payment_status === "Paid"
-                                ? "text-green-600"
-                                : "text-red-600"
-                            }`}
-                          >
-                            ৳{customer.paid_amount?.toLocaleString()}
-                          </span>
+                        {/* Paid Amount + Download */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 gap-2 w-full sm:w-auto">
+                          {/* Paid Amount */}
+                          <div className="flex flex-col sm:items-end">
+                            <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                              Paid Amount
+                            </span>
+                            <span
+                              className={`text-lg sm:text-xl font-semibold ${
+                                customer.payment_status === "Paid"
+                                  ? "text-green-600"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              ৳{customer.paid_amount?.toLocaleString()}
+                            </span>
+                          </div>
+
+                          {/* Download PDF Button */}
+                          <div>
+                            <DownloadPDF customer={customer} />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -158,11 +167,10 @@ const CustomerList: React.FC<PropsType> = ({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="border-t bg-muted/30 px-6 "
+            className="border-t bg-muted/30 px-6 py-3"
           >
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <h4 className="text-lg font-semibold">Summary</h4>
-
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 text-sm">
                 <div className="flex flex-col items-start sm:items-end">
                   <span className="text-muted-foreground">Total Paid</span>
