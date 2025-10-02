@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useGetCustomerSalesReportByIDQuery } from "@/redux/features/customer/customerApi";
 import { motion } from "framer-motion";
 import {
@@ -19,13 +19,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, User, Calendar, FileText, Wallet } from "lucide-react";
+import {
+  Loader2,
+  User,
+  Calendar,
+  FileText,
+  Wallet,
+  ArrowLeft,
+} from "lucide-react";
 import DownloadPDF from "./DownloadPDF";
 import { TSales } from "@/types";
+import { Button } from "../ui/button";
 
 export default function SingleSale() {
   const { id } = useParams();
   const customerId = Number(id);
+  const router = useRouter();
 
   const { data, isLoading, error } = useGetCustomerSalesReportByIDQuery({
     customerId,
@@ -54,8 +63,18 @@ export default function SingleSale() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="container mx-auto px-4 py-8 "
+      className="container mx-auto px-4 py-8"
     >
+      {/* Back Button */}
+      <Button
+        variant={"outline"}
+        onClick={() => router.back()}
+        className="mb-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </Button>
+
       <Card className="shadow-lg border rounded-xl">
         {/* Header */}
         <CardHeader className="pb-4 border-b">

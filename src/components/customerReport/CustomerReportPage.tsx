@@ -35,6 +35,7 @@ export default function CustomerReportPage() {
     }, 500);
 
     return () => clearTimeout(handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
   // Fetch customers dynamically
