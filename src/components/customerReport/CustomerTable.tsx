@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Wallet, Calendar, User, CreditCard, Receipt } from "lucide-react";
-import DownloadPDF from "./DownloadPDF";
+import Link from "next/link";
+import { Button } from "../ui/button";
 
 type PropsType = {
   customers: TSales[];
@@ -134,7 +135,11 @@ const CustomerList: React.FC<PropsType> = ({
 
                           {/* Download PDF Button */}
                           <div>
-                            <DownloadPDF customer={customer} />
+                            <Link href={`/customer-report/${customer.id}`}>
+                              <Button variant="outline" className="w-full">
+                                View details
+                              </Button>
+                            </Link>
                           </div>
                         </div>
                       </div>

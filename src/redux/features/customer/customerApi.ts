@@ -1,6 +1,6 @@
 // customerApi.ts
 import baseApi from "@/redux/api/baseApi";
-import { TResponse, TSalesReport } from "@/types";
+import { TResponse, TSales, TSalesReport } from "@/types";
 
 const customerApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -30,24 +30,21 @@ const customerApi = baseApi.injectEndpoints({
       providesTags: ["Customers"],
     }),
 
-    // // ✅ Fetch sales report for a specific customer by ID
-    // getCustomerSalesReportByID: builder.query<
-    //   TResponse<{ date: string; totalQty: number; totalAmount: number }[]>,
-    //   { customerId: number; startDate: string; endDate: string }
-    // >({
-    //   query: ({ customerId, startDate, endDate }) => ({
-    //     url: `reports/customer/${customerId}`,
-    //     params: { startDate, endDate }, // ✅ send as query params
-    //   }),
-    //   providesTags: (_result, _error, { customerId }) => [
-    //     { type: "Customers", id: customerId },
-    //   ],
-    // }),
+    // ✅ Fetch sales report for a specific customer by ID
+    getCustomerSalesReportByID: builder.query<
+      TResponse<TSales>,
+      { customerId: number }
+    >({
+      query: ({ customerId }) => ({
+        url: `sales/customer/${customerId}`,
+      }),
+      providesTags: (_result, _error, { customerId }) => [
+        { type: "Customers", id: customerId },
+      ],
+    }),
   }),
 });
 
-export const {
-  useGetCustomerRecordsQuery,
-} = customerApi;
+export const { useGetCustomerRecordsQuery, useGetCustomerSalesReportByIDQuery } = customerApi;
 
 export default customerApi;
