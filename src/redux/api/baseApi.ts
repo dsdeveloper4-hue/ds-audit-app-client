@@ -28,7 +28,7 @@ const baseQueryWithRefreshToken = async (
 ) => {
   let result = await baseQuery(args, api, extraOptions as any); // cast to any for fetchBaseQuery
 
-  if (result?.error?.status == 401 || result?.error?.status == 401) {
+  if (result?.error?.status == 401 || result?.error?.status == 500) {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh-token`,
       {
