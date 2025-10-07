@@ -137,7 +137,7 @@ const CustomerList: React.FC<PropsType> = ({
                           <div>
                             <Link href={`/customer-report/${customer.id}`}>
                               <Button variant="outline" className="w-full">
-                                View details
+                                View Details
                               </Button>
                             </Link>
                           </div>
