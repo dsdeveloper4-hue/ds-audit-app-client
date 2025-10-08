@@ -5,20 +5,18 @@ import { FileDown } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { TSales } from "@/types";
+import logoUrl from "../../../public/index.jpeg";
 
 interface DownloadPDFProps {
   sale: TSales;
 }
 
 export default function DownloadPDF({ sale }: DownloadPDFProps) {
-  const handleDownload = () => {
+  const handleDownload = async () => {
     const cmToMm = (cm: number) => cm * 10;
 
-    // Page size (14cm × 22.3cm)
     const pageWidth = cmToMm(14);
     const pageHeight = cmToMm(22.3);
-    const headerHeight = 25;
-    const footerHeight = 20;
     const marginX = 8;
 
     const doc = new jsPDF({
@@ -28,38 +26,76 @@ export default function DownloadPDF({ sale }: DownloadPDFProps) {
     });
 
     /* ---------------- HEADER ---------------- */
+
+    // Prepare address
+    const address = "";
+    const splitAddress = doc.splitTextToSize(
+      address,
+      pageWidth - marginX * 2 - 15
+    ); // 15mm indent
+    const addressLines = splitAddress.length;
+
+    // Dynamic header height: logo + info + name + address + padding
+    const headerHeight = 5 + 10 + 10 + addressLines * 5 + 5; // mm
+
+    // Draw header background
     doc.setFillColor(180, 225, 200);
     doc.rect(0, 0, pageWidth, headerHeight, "F");
 
-    // Logo ellipse
-    doc.setFillColor(255, 255, 255);
-    doc.ellipse(20, 12, 10, 5, "F");
-    doc.setDrawColor(80, 80, 80);
-    doc.ellipse(20, 12, 10, 5, "S");
-
-    // Logo text
-    doc.setTextColor(108, 0, 150);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.text("Index", 20, 13, { align: "center" });
+    // Logo image
+    const img = new Image();
+    img.src = logoUrl.src;
+    await new Promise((res) => {
+      img.onload = res;
+    });
+    doc.addImage(img, "JPEG", marginX, 5, 20, 10);
 
     // Voucher title
-    doc.setTextColor(40, 40, 40);
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
+    doc.setTextColor(40, 40, 40);
     doc.text("VOUCHER", pageWidth - marginX, 10, { align: "right" });
 
-    // Info lines
+    // Info lines with dotted underline
+    doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(60, 60, 60);
-    doc.text("Date:", marginX, 19);
-    doc.line(marginX + 10, 19.5, marginX + 40, 19.5);
-    doc.text("Phone No:", marginX + 50, 19);
-    doc.line(marginX + 70, 19.5, pageWidth - marginX, 19.5);
 
+    const drawDotsLine = (x: number, y: number, width: number) => {
+      const dotWidth = 0.7;
+      let currX = x;
+      while (currX < x + width) {
+        doc.circle(currX, y, dotWidth / 2, "F");
+        currX += dotWidth * 2; // space between dots
+      }
+    };
+
+    // Date
+    doc.text("Date:", marginX, 19);
+    drawDotsLine(marginX + 10, 19, 30);
+
+    // Phone
+    doc.text("Phone No:", marginX + 50, 19);
+    drawDotsLine(marginX + 70, 19, pageWidth - marginX - 70);
+
+    // Name
     doc.text("Name:", marginX, 23.5);
-    doc.line(marginX + 12, 24, pageWidth - marginX, 24);
-    doc.text("Address:", marginX, 28);
-    doc.line(marginX + 18, 28.5, pageWidth - marginX, 28.5);
+    drawDotsLine(marginX + 12, 23.5, pageWidth - marginX - 12);
+
+    // Address
+    const addressStartY = 28;
+    doc.text("Address:", marginX, addressStartY);
+
+    // Draw dotted line for each address line
+    const addressLineYSpacing = 5;
+    splitAddress.forEach((line, i) => {
+      doc.text(line, marginX + 15, addressStartY + i * addressLineYSpacing); // indent 15
+      drawDotsLine(
+        marginX + 15,
+        addressStartY + i * addressLineYSpacing + 1,
+        pageWidth - marginX * 2 - 15
+      );
+    });
 
     /* ---------------- TABLE ---------------- */
     const tableStartY = headerHeight + 3;
@@ -71,20 +107,16 @@ export default function DownloadPDF({ sale }: DownloadPDFProps) {
 
     if (sale?.items?.length) {
       sale.items.forEach((item, index) => {
-        const rate = item.price_per_unit?.toFixed(2) || "";
-        const qty = item.sales_qty?.toString() || "";
-        const amount = item.total_cost?.toFixed(2) || "";
         tableRows.push([
           (index + 1).toString(),
           item.item_name || "",
-          rate,
-          qty,
-          amount,
+          item.price_per_unit?.toFixed(2) || "",
+          item.sales_qty?.toString() || "",
+          item.total_cost?.toFixed(2) || "",
         ]);
       });
     }
 
-    // Fill remaining rows
     for (let i = (sale?.items?.length || 0) + 1; i <= 12; i++) {
       tableRows.push([i.toString(), "", "", "", ""]);
     }
@@ -113,10 +145,10 @@ export default function DownloadPDF({ sale }: DownloadPDFProps) {
         3: { halign: "center", cellWidth: 20 },
         4: { halign: "center", cellWidth: 20 },
       },
+      margin: { left: marginX, right: marginX },
       tableLineColor: [0, 0, 0],
       tableLineWidth: 0.1,
-      margin: { left: marginX, right: marginX },
-      styles: { cellPadding: 2, lineColor: [0, 0, 0], lineWidth: 0.1 },
+      styles: { cellPadding: 2 },
     });
 
     const finalTableY = (doc as any).lastAutoTable.finalY;
@@ -128,34 +160,29 @@ export default function DownloadPDF({ sale }: DownloadPDFProps) {
     const totalLabelX = pageWidth - marginX - 40;
     const totalLabelY = finalTableY;
     const cellH = 8;
-    const cellW = 20; // ✅ set width to 20mm each
+    const cellW = 20;
 
-    // Label cell
     doc.setFillColor(230, 230, 230);
     doc.rect(totalLabelX, totalLabelY, cellW, cellH, "FD");
-    doc.setTextColor(0, 0, 0);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
     doc.text("Total", totalLabelX + cellW / 2, totalLabelY + 5, {
       align: "center",
     });
 
-    // Amount cell
     doc.setFillColor(255, 255, 255);
     doc.rect(totalLabelX + cellW, totalLabelY, cellW, cellH, "S");
     doc.text(
       totalAmount.toFixed(2),
       totalLabelX + cellW + cellW / 2,
       totalLabelY + 5,
-      {
-        align: "center",
-      }
+      { align: "center" }
     );
 
     /* ---------------- FOOTER ---------------- */
-    const footerStartY = pageHeight - footerHeight;
+    const footerStartY = pageHeight - 25;
     doc.setFillColor(180, 225, 200);
-    doc.rect(0, footerStartY, pageWidth, footerHeight, "F");
+    doc.rect(0, footerStartY, pageWidth, 25, "F");
 
     doc.setTextColor(0, 0, 0);
     doc.setFont("helvetica", "bold");
@@ -164,17 +191,13 @@ export default function DownloadPDF({ sale }: DownloadPDFProps) {
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
-    doc.text(
-      [
-        "Head Office: Colombia Super Market (6th Floor), 31 Mohakhali C/A, Dhaka-1212",
-        "Phone: 01629-612189 | E-mail: indexayu7@gmail.com",
-        "Web: www.indexlaboratories.com",
-      ],
-      marginX,
-      footerStartY + 12
-    );
+    const footerText = [
+      "Head Office: Colombia Super Market (6th Floor), 31 Mohakhali C/A, Dhaka-1212",
+      "Phone: 01629-612189 | E-mail: indexayu7@gmail.com",
+      "Web: www.indexlaboratories.com",
+    ];
+    doc.text(footerText, marginX, footerStartY + 12);
 
-    // Save PDF
     doc.save(`voucher-${sale?.sales_code || "blank"}.pdf`);
   };
 
