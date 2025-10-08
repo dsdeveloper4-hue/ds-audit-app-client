@@ -12,16 +12,14 @@ interface DownloadPDFProps {
 
 export default function DownloadPDF({ sale }: DownloadPDFProps) {
   const handleDownload = () => {
-    // Convert cm to mm for jsPDF
     const cmToMm = (cm: number) => cm * 10;
 
-    // Page setup (exactly as specified)
-    const pageWidth = cmToMm(14.1); // 141 mm
-    const pageHeight = cmToMm(22.4); // 224 mm
-    const headerHeight = cmToMm(3.8); // 38 mm
-    const footerHeight = cmToMm(1.3); // 13 mm
+    // Page size (14cm × 22.3cm)
+    const pageWidth = cmToMm(14);
+    const pageHeight = cmToMm(22.3);
+    const headerHeight = 25;
+    const footerHeight = 20;
     const marginX = 8;
-    const marginY = 5;
 
     const doc = new jsPDF({
       orientation: "portrait",
@@ -29,88 +27,68 @@ export default function DownloadPDF({ sale }: DownloadPDFProps) {
       format: [pageWidth, pageHeight],
     });
 
-    // --- HEADER SECTION ---
-    // Light green/teal background (RGB: 177, 232, 207)
-    doc.setFillColor(177, 232, 207);
+    /* ---------------- HEADER ---------------- */
+    doc.setFillColor(180, 225, 200);
     doc.rect(0, 0, pageWidth, headerHeight, "F");
 
-    // Index logo (oval shape)
+    // Logo ellipse
     doc.setFillColor(255, 255, 255);
-    doc.ellipse(20, 12, 12, 6, "F");
-    doc.setDrawColor(128, 128, 128);
-    doc.ellipse(20, 12, 12, 6, "S");
+    doc.ellipse(20, 12, 10, 5, "F");
+    doc.setDrawColor(80, 80, 80);
+    doc.ellipse(20, 12, 10, 5, "S");
 
-    // Index text inside oval
-    doc.setTextColor(128, 0, 128);
+    // Logo text
+    doc.setTextColor(108, 0, 150);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.text("Index", 20, 13, { align: "center" });
 
-    // VOUCHER text (right side, purple/gray)
-    doc.setTextColor(128, 128, 128);
-    doc.setFont("helvetica", "bold");
+    // Voucher title
+    doc.setTextColor(40, 40, 40);
     doc.setFontSize(14);
-    doc.text("VOUCHER", pageWidth - marginX, 12, { align: "right" });
+    doc.text("VOUCHER", pageWidth - marginX, 10, { align: "right" });
 
-    // Date field
-    doc.setTextColor(128, 128, 128);
-    doc.setFont("helvetica", "normal");
+    // Info lines
     doc.setFontSize(9);
-    doc.text("Date:", pageWidth - 50, 20);
-    doc.setDrawColor(200, 200, 200);
-    doc.line(pageWidth - 35, 21, pageWidth - marginX, 21);
+    doc.setTextColor(60, 60, 60);
+    doc.text("Date:", marginX, 19);
+    doc.line(marginX + 10, 19.5, marginX + 40, 19.5);
+    doc.text("Phone No:", marginX + 50, 19);
+    doc.line(marginX + 70, 19.5, pageWidth - marginX, 19.5);
 
-    // Phone No field
-    doc.text("Phone No:", pageWidth - 50, 26);
-    doc.line(pageWidth - 30, 27, pageWidth - marginX, 27);
+    doc.text("Name:", marginX, 23.5);
+    doc.line(marginX + 12, 24, pageWidth - marginX, 24);
+    doc.text("Address:", marginX, 28);
+    doc.line(marginX + 18, 28.5, pageWidth - marginX, 28.5);
 
-    // Name field (spans width)
-    doc.setTextColor(128, 128, 128);
-    doc.text("Name", marginX, 30);
-    doc.line(marginX + 15, 31, pageWidth - marginX, 31);
+    /* ---------------- TABLE ---------------- */
+    const tableStartY = headerHeight + 3;
 
-    // Address field (spans width)
-    doc.text("Address", marginX, 36);
-    doc.line(marginX + 20, 37, pageWidth - marginX, 37);
-
-    // --- MAIN TABLE SECTION ---
-    const tableStartY = headerHeight + 2;
-
-    // Table headers with green background (RGB: 76, 175, 80)
     const tableHeaders = [
       ["NO.", "ITEM DESCRIPTION", "RATE", "QUANTITY", "AMOUNT"],
     ];
-
-    // Create rows - Choose between empty voucher or actual sale data
     const tableRows: string[][] = [];
 
-    // OPTION 1: Empty voucher template (current behavior)
-    for (let i = 1; i <= 12; i++) {
-      tableRows.push([i.toString(), "", "", "", ""]);
-    }
-
-    // OPTION 2: If you want to show actual sale data, uncomment this instead:
-    if (sale?.items && sale.items.length > 0) {
+    if (sale?.items?.length) {
       sale.items.forEach((item, index) => {
+        const rate = item.price_per_unit?.toFixed(2) || "";
+        const qty = item.sales_qty?.toString() || "";
+        const amount = item.total_cost?.toFixed(2) || "";
         tableRows.push([
           (index + 1).toString(),
           item.item_name || "",
-          item.price_per_unit?.toFixed(2) || "",
-          item.sales_qty?.toString() || "",
-          item.total_cost?.toFixed(2) || ""
+          rate,
+          qty,
+          amount,
         ]);
       });
-      // Add empty rows to fill up to 12 rows
-      for (let i = sale.items.length + 1; i <= 12; i++) {
-        tableRows.push([i.toString(), "", "", "", ""]);
-      }
-    } else {
-      for (let i = 1; i <= 12; i++) {
-        tableRows.push([i.toString(), "", "", "", ""]);
-      }
     }
 
-    // Generate main table with EQUAL WIDTHS for RATE, QUANTITY, AMOUNT
+    // Fill remaining rows
+    for (let i = (sale?.items?.length || 0) + 1; i <= 12; i++) {
+      tableRows.push([i.toString(), "", "", "", ""]);
+    }
+
     autoTable(doc, {
       startY: tableStartY,
       head: tableHeaders,
@@ -122,7 +100,6 @@ export default function DownloadPDF({ sale }: DownloadPDFProps) {
         fontSize: 9,
         fontStyle: "bold",
         halign: "center",
-        valign: "middle",
       },
       bodyStyles: {
         fontSize: 8,
@@ -130,74 +107,74 @@ export default function DownloadPDF({ sale }: DownloadPDFProps) {
         fillColor: [255, 255, 255],
       },
       columnStyles: {
-        0: { halign: "center", cellWidth: 12 }, // NO. - slightly smaller
-        1: { halign: "left", cellWidth: 75 }, // ITEM DESCRIPTION - larger
-        2: { halign: "center", cellWidth: 18 }, // RATE - equal width
-        3: { halign: "center", cellWidth: 18 }, // QUANTITY - equal width
-        4: { halign: "center", cellWidth: 18 }, // AMOUNT - equal width
+        0: { halign: "center", cellWidth: 10 },
+        1: { halign: "left", cellWidth: 54 },
+        2: { halign: "center", cellWidth: 20 },
+        3: { halign: "center", cellWidth: 20 },
+        4: { halign: "center", cellWidth: 20 },
       },
       tableLineColor: [0, 0, 0],
       tableLineWidth: 0.1,
       margin: { left: marginX, right: marginX },
-      styles: {
-        cellPadding: 2,
-        lineColor: [0, 0, 0],
-        lineWidth: 0.1,
-      },
+      styles: { cellPadding: 2, lineColor: [0, 0, 0], lineWidth: 0.1 },
     });
 
-    // Get the final Y position after the table
     const finalTableY = (doc as any).lastAutoTable.finalY;
 
-    // Add "Total" cell at bottom right
-    const totalCellX = pageWidth - marginX - 18;
-    const totalCellY = finalTableY;
-    const totalCellWidth = 18;
-    const totalCellHeight = 8;
+    /* ---------------- TOTAL ROW ---------------- */
+    const totalAmount =
+      sale?.items?.reduce((sum, i) => sum + (i.total_cost || 0), 0) || 0;
 
-    doc.setFillColor(220, 220, 220);
-    doc.rect(totalCellX, totalCellY, totalCellWidth, totalCellHeight, "FD");
+    const totalLabelX = pageWidth - marginX - 40;
+    const totalLabelY = finalTableY;
+    const cellH = 8;
+    const cellW = 20; // ✅ set width to 20mm each
 
+    // Label cell
+    doc.setFillColor(230, 230, 230);
+    doc.rect(totalLabelX, totalLabelY, cellW, cellH, "FD");
     doc.setTextColor(0, 0, 0);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
-    doc.text("Total", totalCellX + totalCellWidth / 2, totalCellY + 5, {
+    doc.text("Total", totalLabelX + cellW / 2, totalLabelY + 5, {
       align: "center",
     });
 
-    // --- FOOTER SECTION ---
-    const footerStartY = pageHeight - footerHeight;
+    // Amount cell
+    doc.setFillColor(255, 255, 255);
+    doc.rect(totalLabelX + cellW, totalLabelY, cellW, cellH, "S");
+    doc.text(
+      totalAmount.toFixed(2),
+      totalLabelX + cellW + cellW / 2,
+      totalLabelY + 5,
+      {
+        align: "center",
+      }
+    );
 
-    // Footer background (same green as header)
-    doc.setFillColor(177, 232, 207);
+    /* ---------------- FOOTER ---------------- */
+    const footerStartY = pageHeight - footerHeight;
+    doc.setFillColor(180, 225, 200);
     doc.rect(0, footerStartY, pageWidth, footerHeight, "F");
 
-    // Company name
     doc.setTextColor(0, 0, 0);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
-    doc.text("Index Laboratories (Ayu) Ltd.", marginX, footerStartY + 4);
+    doc.text("Index Laboratories (Ayu) Ltd.", marginX, footerStartY + 7);
 
-    // Head Office details
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
     doc.text(
-      "Head Office: Colombia Super Marcket (6th Floor)31,",
-      marginX + 80,
-      footerStartY + 3
-    );
-    doc.text(
-      "Mohakhali C/A, Dhaka-1212, Phone: 01629-612189",
-      marginX + 80,
-      footerStartY + 7
-    );
-    doc.text(
-      "E-mail: indexayu7@gmail.com, Web: www.indexlaboratories.com",
-      marginX + 80,
-      footerStartY + 11
+      [
+        "Head Office: Colombia Super Market (6th Floor), 31 Mohakhali C/A, Dhaka-1212",
+        "Phone: 01629-612189 | E-mail: indexayu7@gmail.com",
+        "Web: www.indexlaboratories.com",
+      ],
+      marginX,
+      footerStartY + 12
     );
 
-    // Save the PDF
+    // Save PDF
     doc.save(`voucher-${sale?.sales_code || "blank"}.pdf`);
   };
 
