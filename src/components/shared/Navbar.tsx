@@ -12,7 +12,7 @@ export default function Navbar() {
   const user = useAppSelector((state) => state.auth.user);
   const dispatch = useAppDispatch();
   const router = useRouter();
-
+  console.log(user)
   const [logoutApi, { isLoading }] = useLogoutMutation(); // ✅ RTK query hook
 
   const handleLogout = async () => {
@@ -42,7 +42,7 @@ export default function Navbar() {
             <User className="h-4 w-4 text-primary" />
           </div>
           <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
-            {user?.first_name}
+            {user?.name || user?.mobile}
           </span>
         </div>
 

@@ -1,15 +1,19 @@
 
 export interface TAuthRes {
-  user: TUser;
   accessToken: string;
+  refreshToken?: string;
 }
 
 export interface TUser {
-  id: number;
-  username: string;
-  first_name: string;
-  last_name: string;
+  id: string;
+  name: string;
   mobile: string;
-  email: string;
-  profile_picture: string | undefined; // you can refine this later
+  roleName?: string;
+}
+
+export interface TDecodedUser {
+  id: string;
+  roleName?: string;
+  iat?: number;
+  exp?: number;
 }

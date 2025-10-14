@@ -13,11 +13,11 @@ export interface TSales {
   sales_date: string;
   subtotal: number;
   created_by: string;
-  items: TItem[];
+  items: TSalesItem[];
 }
 
 
-export interface TItem {
+export interface TSalesItem {
   sales_item_id: number;
   sales_qty: number;
   price_per_unit: number;

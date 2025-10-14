@@ -3,6 +3,13 @@ import authReducer from "@/redux/features/auth/authSlice";
 import baseApi from "./api/baseApi";
 import { persistReducer, persistStore ,FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
 import storage from "redux-persist/lib/storage";
+// Import all API slices to ensure they are injected
+import "@/redux/features/audit/auditApi";
+import "@/redux/features/auditRecord/auditRecordApi";
+import "@/redux/features/room/roomApi";
+import "@/redux/features/item/itemApi";
+import "@/redux/features/inventory/inventoryApi";
+import "@/redux/features/auth/authApi";
 const persistConfig = {
   key: "auth",
   storage,

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AllProviders from "@/providers";
+import { Toaster } from "@/components/ui/toaster";
+import ApiConnectionCheck from "@/components/shared/ApiConnectionCheck";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({
@@ -11,11 +13,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Digital Seba",
+    default: "Digital Seba - Audit Management",
     template: "%s | Digital Seba",
   },
   description:
-    "Digital Seba is a modern platform that helps you manage products, track sales, and access digital services through a secure dashboard.",
+    "Digital Seba Audit Management System - Track inventory audits, manage rooms, items, and monitor stock levels across your organization.",
 };
 
 
@@ -29,7 +31,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AllProviders>{children}</AllProviders>
+        <AllProviders>
+          {children}
+          <Toaster />
+          <ApiConnectionCheck />
+        </AllProviders>
       </body>
     </html>
   );

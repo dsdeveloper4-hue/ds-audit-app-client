@@ -9,7 +9,7 @@ import { logout, setUser } from "../features/auth/authSlice";
 import { verifyToken } from "@/utils/verifyToken";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL as string,
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1",
   credentials: "include",
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).auth.token;
@@ -61,7 +61,7 @@ const baseApi = createApi({
   reducerPath: "baseApi",
   baseQuery: baseQueryWithRefreshToken,
   endpoints: () => ({}), // remove unused `builder`
-  tagTypes: ["Products", "Customers"],
+  tagTypes: ["Products", "Customers", "Audits", "AuditRecords", "Rooms", "Items", "Inventories"],
 });
 
 export default baseApi;

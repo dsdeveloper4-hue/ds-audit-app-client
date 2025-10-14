@@ -13,6 +13,11 @@ import { useAppDispatch } from "@/redux/hook";
 import { setUser } from "@/redux/features/auth/authSlice";
 import { verifyToken } from "@/utils/verifyToken";
 
+
+const defaultValues = {
+   mobile:"01617134236",
+    password:"sajukhan"
+}
 export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +52,10 @@ export default function LoginPage() {
           <div className="bg-indigo-600 dark:bg-indigo-500 text-white text-center py-8 px-6">
             <h1 className="text-3xl font-bold">Digital Seba</h1>
             <p className="mt-2 text-sm opacity-90">
-              Welcome back! Please login to continue
+              Audit Management System
+            </p>
+            <p className="mt-1 text-xs opacity-75">
+              Please login to continue
             </p>
           </div>
 
@@ -56,22 +64,23 @@ export default function LoginPage() {
             <FormWrapper
               schema={loginSchema}
               onSubmit={handleLogin}
+              defaultValues={defaultValues}
               className="bg-white dark:bg-gray-900"
             >
               {(control, handleSubmit) => (
                 <>
                   <FormInput
-                    name="username"
-                    label="Username"
-                    placeholder="Enter your username"
-                    control={control}
-                    type="text"
-                  />
-                  <FormInput
                     name="mobile"
                     label="Mobile Number"
-                    placeholder="Enter 10-digit mobile number"
+                    placeholder="Enter 11-digit mobile number"
                     type="tel"
+                    control={control}
+                  />
+                  <FormInput
+                    name="password"
+                    label="Password"
+                    placeholder="Enter your password"
+                    type="password"
                     control={control}
                   />
 

@@ -2,6 +2,7 @@
 
 import Sidebar from "@/components/shared/Sidebar";
 import Navbar from "@/components/shared/Navbar";
+import ErrorBoundary from "@/components/shared/ErrorBoundary";
 import { useAppSelector } from "@/redux/hook";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -37,7 +38,7 @@ export default function RootLayout({
   }
 
   return (
-    <>
+    <ErrorBoundary>
       {/* Top Navbar */}
       <Navbar />
 
@@ -50,6 +51,6 @@ export default function RootLayout({
           {children}
         </main>
       </div>
-    </>
+    </ErrorBoundary>
   );
 }
