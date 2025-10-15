@@ -1,5 +1,5 @@
 import baseApi from "@/redux/api/baseApi";
-import { TResponse, TUserWithRole } from "@/types";
+import { TResponse, TUserWithRole, TRole } from "@/types";
 
 interface TCreateUserPayload {
   name: string;
@@ -21,6 +21,12 @@ const userApi = baseApi.injectEndpoints({
     getAllUsers: builder.query<TResponse<TUserWithRole[]>, void>({
       query: () => "/users",
       providesTags: ["Users"],
+    }),
+
+    // Get all roles
+    getAllRoles: builder.query<TResponse<TRole[]>, void>({
+      query: () => "/users/roles",
+      providesTags: ["Roles"],
     }),
 
     // Get user by ID
@@ -68,6 +74,7 @@ const userApi = baseApi.injectEndpoints({
 
 export const {
   useGetAllUsersQuery,
+  useGetAllRolesQuery,
   useGetUserByIdQuery,
   useCreateUserMutation,
   useUpdateUserMutation,

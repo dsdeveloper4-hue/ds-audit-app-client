@@ -26,9 +26,10 @@ import Error from "@/components/shared/Error";
 import { TItem, TCreateItemPayload } from "@/types";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import PermissionGuard from "@/components/shared/PermissionGuard";
+import { useRole } from "@/hooks/useRole";
 
 export default function ItemsPage() {
+  const { canManageUsers } = useRole();
   const { data, isLoading, error } = useGetAllItemsQuery();
   const [createItem, { isLoading: isCreating }] = useCreateItemMutation();
   const [updateItem, { isLoading: isUpdating }] = useUpdateItemMutation();
@@ -138,15 +139,13 @@ export default function ItemsPage() {
             Manage inventory items and their categories
           </p>
         </div>
-        {!showForm && (
-          <PermissionGuard resource="item" action="create">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button onClick={() => setShowForm(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Item
-              </Button>
-            </motion.div>
-          </PermissionGuard>
+        {!showForm && canManageUsers && (
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Item
+            </Button>
+          </motion.div>
         )}
       </motion.div>
 

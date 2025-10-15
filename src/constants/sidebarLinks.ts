@@ -5,8 +5,6 @@ import {
   Home,
   Package,
   DoorOpen,
-  Shield,
-  Key,
 } from "lucide-react";
 
 export const sidebarLinks = [
@@ -34,15 +32,5 @@ export const sidebarLinks = [
     title: "Users",
     href: "/users",
     icon: Users,
-  },
-  {
-    title: "Roles",
-    href: "/roles",
-    icon: Shield,
-  },
-  {
-    title: "Permissions",
-    href: "/permissions",
-    icon: Key,
   },
 ];

@@ -23,10 +23,11 @@ import Error from "@/components/shared/Error";
 import { TAudit } from "@/types";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import PermissionGuard from "@/components/shared/PermissionGuard";
+import { useRole } from "@/hooks/useRole";
 
 export default function AuditsPage() {
   const router = useRouter();
+  const { canManageUsers } = useRole();
   const { data, isLoading, error } = useGetAllAuditsQuery();
   const [deleteAudit] = useDeleteAuditMutation();
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -115,14 +116,14 @@ export default function AuditsPage() {
             Manage and track inventory audits
           </p>
         </div>
-        <PermissionGuard resource="audit" action="create">
+        {canManageUsers && (
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button onClick={() => router.push("/audits/create")}>
               <Plus className="h-4 w-4 mr-2" />
               New Audit
             </Button>
           </motion.div>
-        </PermissionGuard>
+        )}
       </motion.div>
 
       {/* Audits Table */}

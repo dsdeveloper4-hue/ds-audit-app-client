@@ -25,9 +25,10 @@ import Error from "@/components/shared/Error";
 import { TRoom, TCreateRoomPayload } from "@/types";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import PermissionGuard from "@/components/shared/PermissionGuard";
+import { useRole } from "@/hooks/useRole";
 
 export default function RoomsPage() {
+  const { canManageUsers } = useRole();
   const { data, isLoading, error } = useGetAllRoomsQuery();
   const [createRoom, { isLoading: isCreating }] = useCreateRoomMutation();
   const [updateRoom, { isLoading: isUpdating }] = useUpdateRoomMutation();
@@ -137,15 +138,13 @@ export default function RoomsPage() {
             Manage room locations for inventory
           </p>
         </div>
-        {!showForm && (
-          <PermissionGuard resource="room" action="create">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button onClick={() => setShowForm(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Room
-              </Button>
-            </motion.div>
-          </PermissionGuard>
+        {!showForm && canManageUsers && (
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Room
+            </Button>
+          </motion.div>
         )}
       </motion.div>
 

@@ -3,11 +3,11 @@
 import { useState } from "react";
 import {
   useGetAllUsersQuery,
+  useGetAllRolesQuery,
   useCreateUserMutation,
   useUpdateUserMutation,
   useDeleteUserMutation,
 } from "@/redux/features/user/userApi";
-import { useGetAllRolesQuery } from "@/redux/features/role/roleApi";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -34,7 +34,7 @@ import Error from "@/components/shared/Error";
 import { TUserWithRole } from "@/types";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import PermissionGuard from "@/components/shared/PermissionGuard";
+import { useRole } from "@/hooks/useRole";
 
 interface TUserFormData {
   name: string;
@@ -44,6 +44,7 @@ interface TUserFormData {
 }
 
 export default function UsersPage() {
+  const { canManageUsers, canManageRole } = useRole();
   const { data, isLoading, error } = useGetAllUsersQuery();
   const { data: rolesData } = useGetAllRolesQuery();
   const [createUser, { isLoading: isCreating }] = useCreateUserMutation();
@@ -58,6 +59,22 @@ export default function UsersPage() {
     password: "",
     role_id: "",
   });
+
+  // Check if user has permission to access user management
+  if (!canManageUsers) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            Access Denied
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400">
+            You don&apos;t have permission to access user management.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) return <ListPageSkeleton />;
   if (error) return <Error />;
@@ -158,15 +175,13 @@ export default function UsersPage() {
             Manage system users and their roles
           </p>
         </div>
-        {!showForm && (
-          <PermissionGuard resource="user" action="create">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button onClick={() => setShowForm(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add User
-              </Button>
-            </motion.div>
-          </PermissionGuard>
+        {!showForm && canManageUsers && (
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add User
+            </Button>
+          </motion.div>
         )}
       </motion.div>
 
@@ -295,14 +310,13 @@ export default function UsersPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Mobile</TableHead>
                   <TableHead>Role</TableHead>
-                  <TableHead>Permissions</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {users.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
+                    <TableCell colSpan={4} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
                         <UsersIcon className="h-12 w-12 text-gray-300" />
                         <p className="text-gray-500 dark:text-gray-400">
@@ -326,13 +340,8 @@ export default function UsersPage() {
                         <Badge variant="secondary">{user.role.name}</Badge>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm text-gray-500">
-                          {user.role.permissions?.length || 0} permissions
-                        </span>
-                      </TableCell>
-                      <TableCell>
                         <div className="flex items-center justify-end gap-2">
-                          <PermissionGuard resource="user" action="update">
+                          {canManageRole(user.role.name) && (
                             <Button
                               size="sm"
                               variant="ghost"
@@ -340,8 +349,8 @@ export default function UsersPage() {
                             >
                               <Edit2 className="h-4 w-4" />
                             </Button>
-                          </PermissionGuard>
-                          <PermissionGuard resource="user" action="delete">
+                          )}
+                          {canManageRole(user.role.name) && (
                             <Button
                               size="sm"
                               variant="destructive"
@@ -350,7 +359,7 @@ export default function UsersPage() {
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
-                          </PermissionGuard>
+                          )}
                         </div>
                       </TableCell>
                     </motion.tr>
