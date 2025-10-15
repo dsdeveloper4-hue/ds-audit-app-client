@@ -4,22 +4,22 @@ import {
   TAudit,
   TCreateAuditPayload,
   TUpdateAuditPayload,
-  TAuditWithRecords,
+  TAuditWithDetails,
+  TCreateItemDetailPayload,
+  TUpdateItemDetailPayload,
+  TItemDetail,
 } from "@/types";
 
 const auditApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Create a new audit
-    createAudit: builder.mutation<
-      TResponse<{ audit: TAudit; totalRecords: number }>,
-      TCreateAuditPayload
-    >({
+    createAudit: builder.mutation<TResponse<TAudit>, TCreateAuditPayload>({
       query: (payload) => ({
         url: "/audits",
         method: "POST",
         body: payload,
       }),
-      invalidatesTags: ["Audits", "AuditRecords"],
+      invalidatesTags: ["Audits"],
     }),
 
     // Get all audits
@@ -29,7 +29,7 @@ const auditApi = baseApi.injectEndpoints({
     }),
 
     // Get single audit by ID
-    getAuditById: builder.query<TResponse<TAuditWithRecords>, string>({
+    getAuditById: builder.query<TResponse<TAuditWithDetails>, string>({
       query: (id) => `/audits/${id}`,
       providesTags: (_result, _error, id) => [{ type: "Audits", id }],
     }),
@@ -50,17 +50,42 @@ const auditApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // Complete audit
-    completeAudit: builder.mutation<TResponse<TAudit>, string>({
-      query: (id) => ({
-        url: `/audits/${id}/complete`,
-        method: "PATCH",
+    // Add item detail to audit
+    addItemDetailToAudit: builder.mutation<
+      TResponse<TItemDetail>,
+      { audit_id: string; payload: TCreateItemDetailPayload }
+    >({
+      query: ({ audit_id, payload }) => ({
+        url: `/audits/${audit_id}/items`,
+        method: "POST",
+        body: payload,
       }),
-      invalidatesTags: (_result, _error, id) => [
-        { type: "Audits", id },
+      invalidatesTags: (_result, _error, { audit_id }) => [
+        { type: "Audits", id: audit_id },
         "Audits",
-        "Inventories",
       ],
+    }),
+
+    // Update item detail
+    updateItemDetail: builder.mutation<
+      TResponse<TItemDetail>,
+      { detail_id: string; payload: TUpdateItemDetailPayload }
+    >({
+      query: ({ detail_id, payload }) => ({
+        url: `/audits/items/${detail_id}`,
+        method: "PATCH",
+        body: payload,
+      }),
+      invalidatesTags: ["Audits"],
+    }),
+
+    // Delete item detail
+    deleteItemDetail: builder.mutation<TResponse<TItemDetail>, string>({
+      query: (detail_id) => ({
+        url: `/audits/items/${detail_id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Audits"],
     }),
 
     // Delete audit
@@ -69,7 +94,7 @@ const auditApi = baseApi.injectEndpoints({
         url: `/audits/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Audits", "AuditRecords"],
+      invalidatesTags: ["Audits"],
     }),
   }),
 });
@@ -79,6 +104,8 @@ export const {
   useGetAllAuditsQuery,
   useGetAuditByIdQuery,
   useUpdateAuditMutation,
-  useCompleteAuditMutation,
+  useAddItemDetailToAuditMutation,
+  useUpdateItemDetailMutation,
+  useDeleteItemDetailMutation,
   useDeleteAuditMutation,
 } = auditApi;

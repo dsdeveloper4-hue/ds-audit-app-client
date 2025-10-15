@@ -4,12 +4,8 @@ import { useState, use } from "react";
 import { useRouter } from "next/navigation";
 import {
   useGetAuditByIdQuery,
-  useCompleteAuditMutation,
+  useUpdateItemDetailMutation,
 } from "@/redux/features/audit/auditApi";
-import {
-  useGetAuditRecordsByAuditIdQuery,
-  useUpdateAuditRecordMutation,
-} from "@/redux/features/auditRecord/auditRecordApi";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +20,6 @@ import {
 } from "@/components/ui/table";
 import {
   ArrowLeft,
-  CheckCircle,
   Loader2,
   Save,
   Building,
@@ -32,7 +27,7 @@ import {
 } from "lucide-react";
 import Loading from "@/components/shared/Loading";
 import Error from "@/components/shared/Error";
-import { TAuditRecord } from "@/types";
+import { TItemDetail } from "@/types";
 import { toast } from "sonner";
 
 export default function AuditDetailsPage({
@@ -43,109 +38,94 @@ export default function AuditDetailsPage({
   const { id } = use(params);
   const router = useRouter();
   const { data: auditData, isLoading: auditLoading } = useGetAuditByIdQuery(id);
-  const { data: recordsData, isLoading: recordsLoading } =
-    useGetAuditRecordsByAuditIdQuery(id);
-  const [updateRecord] = useUpdateAuditRecordMutation();
-  const [completeAudit, { isLoading: isCompleting }] =
-    useCompleteAuditMutation();
+  const [updateItemDetail] = useUpdateItemDetailMutation();
 
-  const [editingRecords, setEditingRecords] = useState<Record<string, any>>({});
+  const [editingDetails, setEditingDetails] = useState<Record<string, any>>({});
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
 
-  if (auditLoading || recordsLoading) return <Loading />;
+  if (auditLoading) return <Loading />;
   if (!auditData?.data) return <Error />;
 
   const audit = auditData.data;
-  const records = recordsData?.data || [];
+  const itemDetails = audit.itemDetails || [];
 
   const handleFieldChange = (
-    recordId: string,
+    detailId: string,
     field: string,
     value: string
   ) => {
-    setEditingRecords((prev) => ({
+    setEditingDetails((prev) => ({
       ...prev,
-      [recordId]: {
-        ...prev[recordId],
+      [detailId]: {
+        ...prev[detailId],
         [field]: value === "" ? "" : Number(value),
       },
     }));
   };
 
-  const handleSaveRecord = async (recordId: string) => {
-    if (!editingRecords[recordId]) return;
+  const handleSaveDetail = async (detailId: string) => {
+    if (!editingDetails[detailId]) return;
 
-    setSavingIds((prev) => new Set(prev).add(recordId));
+    setSavingIds((prev) => new Set(prev).add(detailId));
     try {
-      await updateRecord({
-        id: recordId,
-        payload: editingRecords[recordId],
+      await updateItemDetail({
+        detail_id: detailId,
+        payload: editingDetails[detailId],
       }).unwrap();
 
       // Clear editing state after successful save
-      setEditingRecords((prev) => {
+      setEditingDetails((prev) => {
         const newState = { ...prev };
-        delete newState[recordId];
+        delete newState[detailId];
         return newState;
       });
-      toast.success("Audit record updated successfully!");
+      toast.success("Item detail updated successfully!");
     } catch (error: any) {
-      console.error("Failed to update record:", error);
-      toast.error(error?.data?.message || "Failed to update record. Please try again.");
+      console.error("Failed to update detail:", error);
+      toast.error(error?.data?.message || "Failed to update detail. Please try again.");
     } finally {
       setSavingIds((prev) => {
         const newSet = new Set(prev);
-        newSet.delete(recordId);
+        newSet.delete(detailId);
         return newSet;
       });
     }
   };
 
-  const handleCompleteAudit = async () => {
-    if (
-      !confirm(
-        "Are you sure you want to complete this audit? This will update all inventory quantities and cannot be undone."
-      )
-    )
-      return;
-
-    try {
-      await completeAudit(id).unwrap();
-      toast.success("Audit completed successfully! Inventory updated.");
-      router.push("/audits");
-    } catch (error: any) {
-      console.error("Failed to complete audit:", error);
-      toast.error(error?.data?.message || "Failed to complete audit. Please try again.");
-    }
-  };
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive"> = {
-      in_progress: "secondary",
-      completed: "default",
-      reviewed: "default",
+      IN_PROGRESS: "secondary",
+      COMPLETED: "default",
+      CANCELED: "destructive",
+    };
+
+    const colors: Record<string, string> = {
+      IN_PROGRESS: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+      COMPLETED: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+      CANCELED: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
     };
 
     return (
-      <Badge variant={variants[status] || "secondary"}>
-        {status.replace("_", " ").toUpperCase()}
+      <Badge variant={variants[status] || "secondary"} className={colors[status]}>
+        {status.replace("_", " ")}
       </Badge>
     );
   };
 
   const getValue = (
-    record: TAuditRecord,
-    field: keyof TAuditRecord,
-    recordId: string
+    detail: TItemDetail,
+    field: keyof TItemDetail,
+    detailId: string
   ) => {
-    if (editingRecords[recordId] && field in editingRecords[recordId]) {
-      return editingRecords[recordId][field];
+    if (editingDetails[detailId] && field in editingDetails[detailId]) {
+      return editingDetails[detailId][field];
     }
-    return record[field];
+    return detail[field];
   };
 
-  const isEdited = (recordId: string) => {
-    return editingRecords[recordId] && Object.keys(editingRecords[recordId]).length > 0;
+  const isEdited = (detailId: string) => {
+    return editingDetails[detailId] && Object.keys(editingDetails[detailId]).length > 0;
   };
 
   return (
@@ -170,25 +150,6 @@ export default function AuditDetailsPage({
           </div>
           <div className="flex items-center gap-4">
             {getStatusBadge(audit.status)}
-            {audit.status === "in_progress" && (
-              <Button
-                onClick={handleCompleteAudit}
-                disabled={isCompleting}
-                className="min-w-[140px]"
-              >
-                {isCompleting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Completing...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Complete Audit
-                  </>
-                )}
-              </Button>
-            )}
           </div>
         </div>
       </div>
@@ -198,25 +159,27 @@ export default function AuditDetailsPage({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Audit Date
+              Created Date
             </p>
             <p className="text-lg font-semibold">
-              {new Date(audit.audit_date).toLocaleDateString()}
+              {new Date(audit.created_at).toLocaleDateString()}
             </p>
           </div>
           <div>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Conducted By
+              Participants
             </p>
             <p className="text-lg font-semibold">
-              {audit.conductor?.name || "Not assigned"}
+              {audit.participants && audit.participants.length > 0
+                ? audit.participants.map(p => p.name).join(", ")
+                : "Not assigned"}
             </p>
           </div>
           <div>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Total Records
+              Total Item Details
             </p>
-            <p className="text-lg font-semibold">{records.length}</p>
+            <p className="text-lg font-semibold">{itemDetails.length}</p>
           </div>
         </div>
         {audit.notes && (
@@ -227,9 +190,9 @@ export default function AuditDetailsPage({
         )}
       </Card>
 
-      {/* Audit Records */}
+      {/* Item Details */}
       <Card className="p-6">
-        <h2 className="text-xl font-bold mb-4">Audit Records</h2>
+        <h2 className="text-xl font-bold mb-4">Item Details</h2>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -246,112 +209,103 @@ export default function AuditDetailsPage({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {records.length === 0 ? (
+              {itemDetails.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center py-8">
                     <p className="text-gray-500 dark:text-gray-400">
-                      No audit records found.
+                      No item details found.
                     </p>
                   </TableCell>
                 </TableRow>
               ) : (
-                records.map((record: TAuditRecord) => (
+                itemDetails.map((detail: TItemDetail) => (
                   <TableRow
-                    key={record.id}
+                    key={detail.id}
                     className={
-                      isEdited(record.id) ? "bg-yellow-50 dark:bg-yellow-950" : ""
+                      isEdited(detail.id) ? "bg-yellow-50 dark:bg-yellow-950" : ""
                     }
                   >
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Building className="h-4 w-4 text-gray-400" />
                         <span className="font-medium">
-                          {record.inventory?.room?.name || "—"}
+                          {detail.room?.name || "—"}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Package className="h-4 w-4 text-gray-400" />
-                        <span>{record.inventory?.item?.name || "—"}</span>
+                        <span>{detail.item?.name || "—"}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      {record.inventory?.item?.unit || "—"}
+                      {detail.item?.unit || "—"}
                     </TableCell>
                     <TableCell>
                       <Input
                         type="number"
                         min="0"
-                        value={getValue(record, "recorded_active", record.id)}
+                        value={getValue(detail, "active_quantity", detail.id)}
                         onChange={(e) =>
                           handleFieldChange(
-                            record.id,
-                            "recorded_active",
+                            detail.id,
+                            "active_quantity",
                             e.target.value
                           )
                         }
                         className="w-20 text-center"
-                        disabled={audit.status !== "in_progress"}
+                        disabled={audit.status !== "IN_PROGRESS"}
                       />
                     </TableCell>
                     <TableCell>
                       <Input
                         type="number"
                         min="0"
-                        value={getValue(record, "recorded_broken", record.id)}
+                        value={getValue(detail, "broken_quantity", detail.id)}
                         onChange={(e) =>
                           handleFieldChange(
-                            record.id,
-                            "recorded_broken",
+                            detail.id,
+                            "broken_quantity",
                             e.target.value
                           )
                         }
                         className="w-20 text-center"
-                        disabled={audit.status !== "in_progress"}
+                        disabled={audit.status !== "IN_PROGRESS"}
                       />
                     </TableCell>
                     <TableCell>
                       <Input
                         type="number"
                         min="0"
-                        value={getValue(record, "recorded_inactive", record.id)}
+                        value={getValue(detail, "inactive_quantity", detail.id)}
                         onChange={(e) =>
                           handleFieldChange(
-                            record.id,
-                            "recorded_inactive",
+                            detail.id,
+                            "inactive_quantity",
                             e.target.value
                           )
                         }
                         className="w-20 text-center"
-                        disabled={audit.status !== "in_progress"}
+                        disabled={audit.status !== "IN_PROGRESS"}
                       />
                     </TableCell>
                     <TableCell className="text-center font-semibold">
-                      {Number(getValue(record, "recorded_active", record.id) || 0) +
-                        Number(getValue(record, "recorded_broken", record.id) || 0) +
-                        Number(getValue(record, "recorded_inactive", record.id) || 0)}
+                      {Number(getValue(detail, "active_quantity", detail.id) || 0) +
+                        Number(getValue(detail, "broken_quantity", detail.id) || 0) +
+                        Number(getValue(detail, "inactive_quantity", detail.id) || 0)}
                     </TableCell>
                     <TableCell>
-                      <Input
-                        type="text"
-                        value={getValue(record, "notes", record.id) || ""}
-                        onChange={(e) =>
-                          handleFieldChange(record.id, "notes", e.target.value)
-                        }
-                        placeholder="Add notes..."
-                        className="min-w-[150px]"
-                        disabled={audit.status !== "in_progress"}
-                      />
+                      <span className="text-sm text-gray-500">—</span>
                     </TableCell>
                     <TableCell>
-                      {audit.status === "in_progress" && isEdited(record.id) && (
+                      {audit.status === "IN_PROGRESS" && isEdited(detail.id) && (
                         <Button
                           size="sm"
-                          onClick={() => handleSaveRecord(record.id)}
-                          disabled={savingIds.has(record.id)}
+                          onClick={() => handleSaveDetail(detail.id)}
+                          disabled={savingIds.has(detail.id)}
                         >
-                          {savingIds.has(record.id) ? (
+                          {savingIds.has(detail.id) ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
                             <>

@@ -52,7 +52,7 @@ const roomApi = baseApi.injectEndpoints({
         url: `/rooms/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Rooms", "Inventories"],
+      invalidatesTags: ["Rooms",],
     }),
   }),
 });

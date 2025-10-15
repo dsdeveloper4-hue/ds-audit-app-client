@@ -1,11 +1,9 @@
-export * from  './user'
-export * from "./products";
-export * from "./sales";
+export * from './user'
 export * from "./audit";
-export * from "./auditRecord";
 export * from "./room";
 export * from "./item";
-export * from "./inventory";
+export * from "./permission";
+export * from "./itemDetail";
 
 export interface TResponse<T> {
   success: boolean;

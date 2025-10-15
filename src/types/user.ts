@@ -9,11 +9,13 @@ export interface TUser {
   name: string;
   mobile: string;
   roleName?: string;
+  role_id?: string;
 }
 
 export interface TDecodedUser {
   id: string;
   roleName?: string;
+  role_id?: string;
   iat?: number;
   exp?: number;
 }

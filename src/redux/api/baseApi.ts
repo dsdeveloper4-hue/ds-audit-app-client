@@ -22,7 +22,7 @@ const baseQuery = fetchBaseQuery({
 
 // Use `unknown` instead of `{}` for extraOptions
 const baseQueryWithRefreshToken = async (
-  args: FetchArgs,
+  args: string | FetchArgs,
   api: BaseQueryApi,
   extraOptions: unknown
 ) => {
@@ -60,8 +60,8 @@ const baseQueryWithRefreshToken = async (
 const baseApi = createApi({
   reducerPath: "baseApi",
   baseQuery: baseQueryWithRefreshToken,
-  endpoints: () => ({}), // remove unused `builder`
-  tagTypes: ["Products", "Customers", "Audits", "AuditRecords", "Rooms", "Items", "Inventories"],
+  endpoints: () => ({}),
+  tagTypes: ["Audits", "Rooms", "Items", "Users", "Roles", "Permissions"],
 });
 
 export default baseApi;

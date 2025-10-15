@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, CheckCircle, X } from "lucide-react";
+import { AlertTriangle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
 export default function ApiConnectionCheck() {
   const [isChecking, setIsChecking] = useState(true);
-  const [isConnected, setIsConnected] = useState(false);
+  // const [isConnected, setIsConnected] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const [apiUrl, setApiUrl] = useState("");
 
@@ -17,7 +17,8 @@ export default function ApiConnectionCheck() {
 
   const checkApiConnection = async () => {
     setIsChecking(true);
-    const url = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+    const url =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
     setApiUrl(url);
 
     try {
@@ -28,14 +29,15 @@ export default function ApiConnectionCheck() {
 
       if (response.ok || response.status === 404) {
         // 404 means server is running but no health endpoint
-        setIsConnected(true);
+        // setIsConnected(true);
         setShowWarning(false);
       } else {
-        setIsConnected(false);
+        // setIsConnected(false);
         setShowWarning(true);
       }
     } catch (error) {
-      setIsConnected(false);
+      console.log(error);
+      // setIsConnected(false);
       setShowWarning(true);
     } finally {
       setIsChecking(false);
@@ -69,8 +71,19 @@ export default function ApiConnectionCheck() {
               <p className="font-medium">Quick Fix:</p>
               <ol className="list-decimal list-inside space-y-1 text-xs">
                 <li>Make sure backend is running on port 5000</li>
-                <li>Create <code className="bg-yellow-100 dark:bg-yellow-900 px-1 rounded">.env.local</code> file</li>
-                <li>Add: <code className="bg-yellow-100 dark:bg-yellow-900 px-1 rounded">NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1</code></li>
+                <li>
+                  Create{" "}
+                  <code className="bg-yellow-100 dark:bg-yellow-900 px-1 rounded">
+                    .env.local
+                  </code>{" "}
+                  file
+                </li>
+                <li>
+                  Add:{" "}
+                  <code className="bg-yellow-100 dark:bg-yellow-900 px-1 rounded">
+                    NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
+                  </code>
+                </li>
                 <li>Restart frontend server</li>
               </ol>
             </div>

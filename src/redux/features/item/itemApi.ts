@@ -52,7 +52,7 @@ const itemApi = baseApi.injectEndpoints({
         url: `/items/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Items", "Inventories"],
+      invalidatesTags: ["Items",],
     }),
   }),
 });

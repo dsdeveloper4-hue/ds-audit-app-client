@@ -5,7 +5,8 @@ import {
   Home,
   Package,
   DoorOpen,
-  Warehouse,
+  Shield,
+  Key,
 } from "lucide-react";
 
 export const sidebarLinks = [
@@ -30,9 +31,18 @@ export const sidebarLinks = [
     icon: Package,
   },
   {
-    title: "Inventory",
-    href: "/inventory",
-    icon: Warehouse,
+    title: "Users",
+    href: "/users",
+    icon: Users,
   },
-
+  {
+    title: "Roles",
+    href: "/roles",
+    icon: Shield,
+  },
+  {
+    title: "Permissions",
+    href: "/permissions",
+    icon: Key,
+  },
 ];

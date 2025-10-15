@@ -19,11 +19,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Edit2, Trash2, X, Loader2, Building } from "lucide-react";
-import Loading from "@/components/shared/Loading";
+import { Plus, Edit2, Trash2, X, Loader2, Building, DoorOpen } from "lucide-react";
+import { ListPageSkeleton } from "@/components/shared/Skeletons";
 import Error from "@/components/shared/Error";
 import { TRoom, TCreateRoomPayload } from "@/types";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+import PermissionGuard from "@/components/shared/PermissionGuard";
 
 export default function RoomsPage() {
   const { data, isLoading, error } = useGetAllRoomsQuery();
@@ -40,7 +42,7 @@ export default function RoomsPage() {
     department: "",
   });
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <ListPageSkeleton />;
   if (error) return <Error />;
 
   const rooms = data?.data || [];
@@ -97,12 +99,38 @@ export default function RoomsPage() {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.4, ease: "easeOut" },
+    },
+  } as const;
+
   return (
-    <div className="space-y-6">
+    <motion.div
+      className="space-y-6"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <motion.div
+        variants={itemVariants}
+        className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
+      >
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <DoorOpen className="h-8 w-8" />
             Rooms
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
@@ -110,16 +138,27 @@ export default function RoomsPage() {
           </p>
         </div>
         {!showForm && (
-          <Button onClick={() => setShowForm(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Room
-          </Button>
+          <PermissionGuard resource="room" action="create">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button onClick={() => setShowForm(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Room
+              </Button>
+            </motion.div>
+          </PermissionGuard>
         )}
-      </div>
+      </motion.div>
 
       {/* Form */}
-      {showForm && (
-        <Card className="p-6">
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            initial={{ opacity: 0, height: 0, scale: 0.95 }}
+            animate={{ opacity: 1, height: "auto", scale: 1 }}
+            exit={{ opacity: 0, height: 0, scale: 0.95 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="p-6 overflow-hidden">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold">
               {editingRoom ? "Edit Room" : "Add New Room"}
@@ -205,11 +244,14 @@ export default function RoomsPage() {
               </Button>
             </div>
           </form>
-        </Card>
-      )}
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Rooms Table */}
-      <Card className="p-6">
+      <motion.div variants={itemVariants}>
+        <Card className="p-6 overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -234,8 +276,14 @@ export default function RoomsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                rooms.map((room: TRoom) => (
-                  <TableRow key={room.id}>
+                rooms.map((room: TRoom, index: number) => (
+                  <motion.tr
+                    key={room.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="border-b hover:bg-gray-50 dark:hover:bg-gray-900"
+                  >
                     <TableCell className="font-medium">{room.name}</TableCell>
                     <TableCell>{room.floor || "—"}</TableCell>
                     <TableCell>{room.department || "—"}</TableCell>
@@ -263,13 +311,14 @@ export default function RoomsPage() {
                         </Button>
                       </div>
                     </TableCell>
-                  </TableRow>
+                  </motion.tr>
                 ))
               )}
             </TableBody>
           </Table>
         </div>
-      </Card>
-    </div>
+        </Card>
+      </motion.div>
+    </motion.div>
   );
 }
