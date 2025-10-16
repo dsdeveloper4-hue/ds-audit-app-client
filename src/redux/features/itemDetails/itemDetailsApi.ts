@@ -7,9 +7,13 @@ import {
 } from "@/types";
 
 const itemDetailsApi = baseApi.injectEndpoints({
+  overrideExisting: process.env.NODE_ENV === "development", // ✅ fix HMR duplication
   endpoints: (builder) => ({
     // Create a new item detail
-    createItemDetail: builder.mutation<TResponse<TItemDetail>, TCreateItemDetailPayload & { audit_id: string }>({
+    createItemDetail: builder.mutation<
+      TResponse<TItemDetail>,
+      TCreateItemDetailPayload & { audit_id: string }
+    >({
       query: (payload) => ({
         url: "/item-details",
         method: "POST",
@@ -29,7 +33,8 @@ const itemDetailsApi = baseApi.injectEndpoints({
       TResponse<TItemDetail[]>,
       { room_id: string; item_id: string }
     >({
-      query: ({ room_id, item_id }) => `/item-details/room/${room_id}/item/${item_id}`,
+      query: ({ room_id, item_id }) =>
+        `/item-details/room/${room_id}/item/${item_id}`,
       providesTags: (_result, _error, { room_id, item_id }) => [
         { type: "ItemDetails", id: `${room_id}-${item_id}` },
       ],
