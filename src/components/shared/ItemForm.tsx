@@ -24,7 +24,6 @@ export default function ItemForm({ editingItem, onClose }: ItemFormProps) {
     name: editingItem?.name || "",
     category: editingItem?.category || "",
     unit: editingItem?.unit || "",
-    description: editingItem?.description || "",
   });
 
   const [createItem, { isLoading: isCreating }] = useCreateItemMutation();
@@ -95,7 +94,7 @@ export default function ItemForm({ editingItem, onClose }: ItemFormProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
             <div className="space-y-2">
               <Label htmlFor="unit">Unit *</Label>
               <Input
@@ -106,17 +105,6 @@ export default function ItemForm({ editingItem, onClose }: ItemFormProps) {
                 }
                 placeholder="e.g., pieces, kg, liters"
                 required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Input
-                id="description"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                placeholder="Brief description"
               />
             </div>
           </div>

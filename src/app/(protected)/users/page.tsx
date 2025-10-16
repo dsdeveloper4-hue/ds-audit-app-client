@@ -3,7 +3,6 @@
 import { useState } from "react";
 import {
   useGetAllUsersQuery,
-  useGetAllRolesQuery,
   useCreateUserMutation,
   useUpdateUserMutation,
   useDeleteUserMutation,
@@ -46,7 +45,6 @@ interface TUserFormData {
 export default function UsersPage() {
   const { canManageUsers, canManageRole } = useRole();
   const { data, isLoading, error } = useGetAllUsersQuery();
-  const { data: rolesData } = useGetAllRolesQuery();
   const [createUser, { isLoading: isCreating }] = useCreateUserMutation();
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
   const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
@@ -80,7 +78,12 @@ export default function UsersPage() {
   if (error) return <Error />;
 
   const users = data?.data || [];
-  const roles = rolesData?.data || [];
+
+  // Static roles based on database schema
+  const roles = [
+    { id: "2", name: "ADMIN", description: "Administrator with management access" },
+    { id: "3", name: "USER", description: "Regular user with basic access" },
+  ];
 
   const resetForm = () => {
     setFormData({
@@ -153,7 +156,6 @@ export default function UsersPage() {
       transition: { duration: 0.4, ease: "easeOut" as const },
     },
   };
-
   return (
     <motion.div
       className="space-y-6"
@@ -337,11 +339,11 @@ export default function UsersPage() {
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.mobile}</TableCell>
                       <TableCell>
-                        <Badge variant="secondary">{user.role.name}</Badge>
+                        <Badge variant="secondary">{user.role}</Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-2">
-                          {canManageRole(user.role.name) && (
+                          {canManageRole(user.role) && (
                             <Button
                               size="sm"
                               variant="ghost"
@@ -350,7 +352,7 @@ export default function UsersPage() {
                               <Edit2 className="h-4 w-4" />
                             </Button>
                           )}
-                          {canManageRole(user.role.name) && (
+                          {canManageRole(user.role) && (
                             <Button
                               size="sm"
                               variant="destructive"

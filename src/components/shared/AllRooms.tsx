@@ -41,7 +41,6 @@ export function RoomList({
                 <TableHead>Room Name</TableHead>
                 <TableHead>Floor</TableHead>
                 <TableHead>Department</TableHead>
-                <TableHead>Description</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -70,11 +69,7 @@ export function RoomList({
                     <TableCell className="font-medium">{room.name}</TableCell>
                     <TableCell>{room.floor || "—"}</TableCell>
                     <TableCell>{room.department || "—"}</TableCell>
-                    <TableCell>
-                      <span className="truncate max-w-xs block">
-                        {room.description || "—"}
-                      </span>
-                    </TableCell>
+
                     <TableCell>
                       <div className="flex items-center justify-end gap-2">
                         {onEdit && (

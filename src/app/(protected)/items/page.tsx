@@ -9,8 +9,7 @@ import {
 } from "@/redux/features/item/itemApi";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -32,8 +31,8 @@ import ItemForm from "@/components/shared/ItemForm";
 export default function ItemsPage() {
   const { canManageUsers } = useRole();
   const { data, isLoading, error } = useGetAllItemsQuery();
-  const [createItem, { isLoading: isCreating }] = useCreateItemMutation();
-  const [updateItem, { isLoading: isUpdating }] = useUpdateItemMutation();
+  const [createItem] = useCreateItemMutation();
+  const [updateItem] = useUpdateItemMutation();
   const [deleteItem, { isLoading: isDeleting }] = useDeleteItemMutation();
 
   const [showForm, setShowForm] = useState(false);
@@ -42,7 +41,6 @@ export default function ItemsPage() {
     name: "",
     category: "",
     unit: "",
-    description: "",
   });
 
   if (isLoading) return <ListPageSkeleton />;
@@ -55,7 +53,6 @@ export default function ItemsPage() {
       name: "",
       category: "",
       unit: "",
-      description: "",
     });
     setEditingItem(null);
     setShowForm(false);
@@ -65,9 +62,8 @@ export default function ItemsPage() {
     setEditingItem(item);
     setFormData({
       name: item.name,
-      category: item.category,
-      unit: item.unit,
-      description: item.description || "",
+      category: item.category || "",
+      unit: item.unit || "",
     });
     setShowForm(true);
   };
@@ -86,7 +82,9 @@ export default function ItemsPage() {
       resetForm();
     } catch (err: any) {
       console.error("Failed to save item:", err);
-      toast.error(err?.data?.message || "Failed to save item. Please try again.");
+      toast.error(
+        err?.data?.message || "Failed to save item. Please try again."
+      );
     }
   };
 
@@ -98,7 +96,9 @@ export default function ItemsPage() {
       toast.success("Item deleted successfully!");
     } catch (err: any) {
       console.error("Failed to delete item:", err);
-      toast.error(err?.data?.message || "Failed to delete item. Please try again.");
+      toast.error(
+        err?.data?.message || "Failed to delete item. Please try again."
+      );
     }
   };
 
@@ -117,7 +117,7 @@ export default function ItemsPage() {
       y: 0,
       transition: { duration: 0.4, ease: "easeOut" },
     },
-  } as const ;
+  } as const;
 
   return (
     <motion.div
@@ -173,14 +173,13 @@ export default function ItemsPage() {
                   <TableHead>Item Name</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Unit</TableHead>
-                  <TableHead>Description</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {items.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
+                    <TableCell colSpan={4} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
                         <Package className="h-12 w-12 text-gray-300" />
                         <p className="text-gray-500 dark:text-gray-400">
@@ -203,11 +202,6 @@ export default function ItemsPage() {
                         <Badge variant="secondary">{item.category}</Badge>
                       </TableCell>
                       <TableCell>{item.unit}</TableCell>
-                      <TableCell>
-                        <span className="truncate max-w-xs block">
-                          {item.description || "—"}
-                        </span>
-                      </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-2">
                           <Button

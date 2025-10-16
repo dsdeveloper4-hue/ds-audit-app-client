@@ -31,7 +31,6 @@ export default function RoomsPage() {
   const [editingRoom, setEditingRoom] = useState<TRoom | null>(null);
   const [formData, setFormData] = useState<TCreateRoomPayload>({
     name: "",
-    description: "",
     floor: "",
     department: "",
   });
@@ -44,7 +43,6 @@ export default function RoomsPage() {
   const resetForm = () => {
     setFormData({
       name: "",
-      description: "",
       floor: "",
       department: "",
     });
@@ -56,7 +54,6 @@ export default function RoomsPage() {
     setEditingRoom(room);
     setFormData({
       name: room.name,
-      description: room.description || "",
       floor: room.floor || "",
       department: room.department || "",
     });
@@ -200,20 +197,6 @@ export default function RoomsPage() {
                         setFormData({ ...formData, department: e.target.value })
                       }
                       placeholder="e.g., IT Department"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Input
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          description: e.target.value,
-                        })
-                      }
-                      placeholder="Brief description"
                     />
                   </div>
                 </div>
