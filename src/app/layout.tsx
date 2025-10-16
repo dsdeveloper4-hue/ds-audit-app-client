@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AllProviders from "@/providers";
 import { Toaster } from "@/components/ui/toaster";
-import ApiConnectionCheck from "@/components/shared/ApiConnectionCheck";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({
@@ -34,7 +33,6 @@ export default function RootLayout({
         <AllProviders>
           {children}
           <Toaster />
-          <ApiConnectionCheck />
         </AllProviders>
       </body>
     </html>

@@ -24,10 +24,12 @@ import { TAudit } from "@/types";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { useRole } from "@/hooks/useRole";
+import CreateAuditPage from "@/components/shared/CreateAudit";
 
 export default function AuditsPage() {
   const router = useRouter();
   const { canManageUsers } = useRole();
+  const [showForm, setShowForm] = useState(false);
   const { data, isLoading, error } = useGetAllAuditsQuery();
   const [deleteAudit] = useDeleteAuditMutation();
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -118,14 +120,14 @@ export default function AuditsPage() {
         </div>
         {canManageUsers && (
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button onClick={() => router.push("/audits/create")}>
+            <Button onClick={() => setShowForm(!showForm)}>
               <Plus className="h-4 w-4 mr-2" />
               New Audit
             </Button>
           </motion.div>
         )}
       </motion.div>
-
+      {showForm && <CreateAuditPage onClose={() => setShowForm(false)} />}
       {/* Audits Table */}
       <motion.div variants={itemVariants}>
         <Card className="p-6 overflow-hidden">
@@ -188,10 +190,9 @@ export default function AuditsPage() {
                         <div className="flex items-center justify-end gap-2">
                           <Button
                             size="sm"
-                            variant="ghost"
                             onClick={() => router.push(`/audits/${audit.id}`)}
                           >
-                            <Eye className="h-4 w-4" />
+                            Details
                           </Button>
                           <Button
                             size="sm"

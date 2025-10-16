@@ -12,7 +12,6 @@ export default function Navbar() {
   const user = useAppSelector((state) => state.auth.user);
   const dispatch = useAppDispatch();
   const router = useRouter();
-  console.log(user)
   const [logoutApi, { isLoading }] = useLogoutMutation(); // ✅ RTK query hook
 
   const handleLogout = async () => {

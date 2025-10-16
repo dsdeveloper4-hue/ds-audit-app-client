@@ -11,21 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Plus, Edit2, Trash2, X, Loader2, Building, DoorOpen } from "lucide-react";
+import { Plus, X, Loader2, DoorOpen } from "lucide-react";
 import { ListPageSkeleton } from "@/components/shared/Skeletons";
 import Error from "@/components/shared/Error";
 import { TRoom, TCreateRoomPayload } from "@/types";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRole } from "@/hooks/useRole";
+import { RoomList } from "@/components/shared/AllRooms";
 
 export default function RoomsPage() {
   const { canManageUsers } = useRole();
@@ -84,19 +77,22 @@ export default function RoomsPage() {
       resetForm();
     } catch (err: any) {
       console.error("Failed to save room:", err);
-      toast.error(err?.data?.message || "Failed to save room. Please try again.");
+      toast.error(
+        err?.data?.message || "Failed to save room. Please try again."
+      );
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this room?")) return;
-
     try {
       await deleteRoom(id).unwrap();
       toast.success("Room deleted successfully!");
     } catch (err: any) {
       console.error("Failed to delete room:", err);
-      toast.error(err?.data?.message || "Failed to delete room. Please try again.");
+      toast.error(
+        err?.data?.message || "Failed to delete room. Please try again."
+      );
     }
   };
 
@@ -158,165 +154,110 @@ export default function RoomsPage() {
             transition={{ duration: 0.3 }}
           >
             <Card className="p-6 overflow-hidden">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">
-              {editingRoom ? "Edit Room" : "Add New Room"}
-            </h2>
-            <Button variant="ghost" size="sm" onClick={resetForm}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Room Name *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  placeholder="e.g., Conference Room A"
-                  required
-                />
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold">
+                  {editingRoom ? "Edit Room" : "Add New Room"}
+                </h2>
+                <Button variant="ghost" size="sm" onClick={resetForm}>
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="floor">Floor</Label>
-                <Input
-                  id="floor"
-                  value={formData.floor}
-                  onChange={(e) =>
-                    setFormData({ ...formData, floor: e.target.value })
-                  }
-                  placeholder="e.g., 1st Floor"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="department">Department</Label>
-                <Input
-                  id="department"
-                  value={formData.department}
-                  onChange={(e) =>
-                    setFormData({ ...formData, department: e.target.value })
-                  }
-                  placeholder="e.g., IT Department"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Input
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  placeholder="Brief description"
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-4 pt-2">
-              <Button
-                type="submit"
-                disabled={isCreating || isUpdating}
-                className="min-w-[100px]"
-              >
-                {isCreating || isUpdating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : editingRoom ? (
-                  "Update"
-                ) : (
-                  "Create"
-                )}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={resetForm}
-                disabled={isCreating || isUpdating}
-              >
-                Cancel
-              </Button>
-            </div>
-          </form>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* inputs */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Room Name *</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      placeholder="e.g., Conference Room A"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="floor">Floor</Label>
+                    <Input
+                      id="floor"
+                      value={formData.floor}
+                      onChange={(e) =>
+                        setFormData({ ...formData, floor: e.target.value })
+                      }
+                      placeholder="e.g., 1st Floor"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="department">Department</Label>
+                    <Input
+                      id="department"
+                      value={formData.department}
+                      onChange={(e) =>
+                        setFormData({ ...formData, department: e.target.value })
+                      }
+                      placeholder="e.g., IT Department"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Input
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          description: e.target.value,
+                        })
+                      }
+                      placeholder="Brief description"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 pt-2">
+                  <Button
+                    type="submit"
+                    disabled={isCreating || isUpdating}
+                    className="min-w-[100px]"
+                  >
+                    {isCreating || isUpdating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : editingRoom ? (
+                      "Update"
+                    ) : (
+                      "Create"
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={resetForm}
+                    disabled={isCreating || isUpdating}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
             </Card>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Rooms Table */}
+      {/* Reusable Room List */}
       <motion.div variants={itemVariants}>
-        <Card className="p-6 overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Room Name</TableHead>
-                <TableHead>Floor</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rooms.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
-                    <div className="flex flex-col items-center gap-2">
-                      <Building className="h-12 w-12 text-gray-300" />
-                      <p className="text-gray-500 dark:text-gray-400">
-                        No rooms found. Add your first room to get started.
-                      </p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                rooms.map((room: TRoom, index: number) => (
-                  <motion.tr
-                    key={room.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="border-b hover:bg-gray-50 dark:hover:bg-gray-900"
-                  >
-                    <TableCell className="font-medium">{room.name}</TableCell>
-                    <TableCell>{room.floor || "—"}</TableCell>
-                    <TableCell>{room.department || "—"}</TableCell>
-                    <TableCell>
-                      <span className="truncate max-w-xs block">
-                        {room.description || "—"}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEdit(room)}
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDelete(room.id)}
-                          disabled={isDeleting}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </motion.tr>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        </Card>
+        <RoomList
+          rooms={rooms}
+          isDeleting={isDeleting}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
       </motion.div>
     </motion.div>
   );

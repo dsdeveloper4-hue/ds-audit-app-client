@@ -259,8 +259,8 @@ export default function UsersPage() {
                         <SelectValue placeholder="Select a role" />
                       </SelectTrigger>
                       <SelectContent>
-                        {roles.map((role) => (
-                          <SelectItem key={role.id} value={role.id}>
+                        {roles.map((role, i) => (
+                          <SelectItem key={i} value={role.id}>
                             {role.name}
                           </SelectItem>
                         ))}
@@ -328,7 +328,7 @@ export default function UsersPage() {
                 ) : (
                   users.map((user: TUserWithRole, index: number) => (
                     <motion.tr
-                      key={user.id}
+                      key={index}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
