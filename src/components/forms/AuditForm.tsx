@@ -2,9 +2,14 @@
 
 import { useState } from "react";
 import { useCreateAuditMutation, useUpdateAuditMutation } from "@/redux/features/audit/auditApi";
+import { useGetAllUsersQuery } from "@/redux/features/user/userApi";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, Users } from "lucide-react";
 import { FormWrapper } from "@/components/shared/FormWrapper";
 import { TAudit, TCreateAuditPayload, TUpdateAuditPayload } from "@/types";
 import { toast } from "sonner";
@@ -19,12 +24,14 @@ interface AuditFormProps {
 export function AuditForm({ isOpen, onClose, audit, onSuccess }: AuditFormProps) {
   const [createAudit, { isLoading: isCreating }] = useCreateAuditMutation();
   const [updateAudit, { isLoading: isUpdating }] = useUpdateAuditMutation();
+  const { data: usersData, isLoading: isLoadingUsers } = useGetAllUsersQuery(undefined);
 
   const currentDate = new Date();
   const [formData, setFormData] = useState<TCreateAuditPayload>({
     month: audit?.month || currentDate.getMonth() + 1,
     year: audit?.year || currentDate.getFullYear(),
     notes: audit?.notes || "",
+    participant_ids: audit?.participants?.map(p => p.id) || [],
   });
 
   const isLoading = isCreating || isUpdating;
@@ -37,11 +44,19 @@ export function AuditForm({ isOpen, onClose, audit, onSuccess }: AuditFormProps)
       if (isEditing) {
         const updatePayload: TUpdateAuditPayload = {
           notes: formData.notes,
+          participant_ids: formData.participant_ids,
         };
         await updateAudit({ id: audit.id, payload: updatePayload }).unwrap();
         toast.success("Audit updated successfully!");
       } else {
-        await createAudit(formData).unwrap();
+        // If no participants selected, use current user as participant
+        const payload: TCreateAuditPayload = {
+          ...formData,
+          participant_ids: formData.participant_ids && formData.participant_ids.length > 0
+            ? formData.participant_ids
+            : [], // Let backend handle default participant logic
+        };
+        await createAudit(payload).unwrap();
         toast.success("Audit created successfully!");
       }
       
@@ -142,6 +157,103 @@ export function AuditForm({ isOpen, onClose, audit, onSuccess }: AuditFormProps)
           rows={4}
           className="w-full px-3 py-2 border rounded-md bg-background text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="participants">Participants</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={false}
+              className="w-full justify-between"
+              disabled={isLoadingUsers}
+            >
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span>
+                  {formData.participant_ids && formData.participant_ids.length > 0
+                    ? `${formData.participant_ids.length} participant${formData.participant_ids.length > 1 ? 's' : ''} selected`
+                    : "Select participants"
+                  }
+                </span>
+              </div>
+              <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-full p-0" align="start">
+            <div className="p-4">
+              <div className="space-y-3 max-h-60 overflow-y-auto">
+                {usersData?.data?.map((user) => {
+                  const isSelected = formData.participant_ids?.includes(user.id) || false;
+                  return (
+                    <div key={user.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`user-${user.id}`}
+                        checked={isSelected}
+                        onCheckedChange={(checked: boolean) => {
+                          const newParticipants = formData.participant_ids || [];
+                          if (checked) {
+                            setFormData({
+                              ...formData,
+                              participant_ids: [...newParticipants, user.id]
+                            });
+                          } else {
+                            setFormData({
+                              ...formData,
+                              participant_ids: newParticipants.filter(id => id !== user.id)
+                            });
+                          }
+                        }}
+                      />
+                      <Label
+                        htmlFor={`user-${user.id}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
+                      >
+                        <div className="flex flex-col">
+                          <span>{user.name}</span>
+                          <span className="text-xs text-muted-foreground">{user.mobile}</span>
+                        </div>
+                      </Label>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {formData.participant_ids && formData.participant_ids.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {formData.participant_ids.map((participantId) => {
+              const user = usersData?.data?.find(u => u.id === participantId);
+              return user ? (
+                <div key={participantId} className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-md text-sm">
+                  {user.name}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData({
+                        ...formData,
+                        participant_ids: formData.participant_ids?.filter(id => id !== participantId) || []
+                      });
+                    }}
+                    className="ml-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : null;
+            })}
+          </div>
+        )}
+
+        {(!formData.participant_ids || formData.participant_ids.length === 0) && (
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            No participants selected. The audit creator will be automatically assigned as a participant.
+          </p>
+        )}
       </div>
 
       {!isEditing && (

@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRole } from "@/hooks/useRole";
 import { RoomList } from "@/components/shared/AllRooms";
+import { useConfirmationDialog } from "@/components/shared/ConfirmationDialog";
 
 export default function RoomsPage() {
   const { canManageUsers } = useRole();
@@ -34,6 +35,8 @@ export default function RoomsPage() {
     floor: "",
     department: "",
   });
+
+  const { confirm, ConfirmationDialog } = useConfirmationDialog();
 
   if (isLoading) return <ListPageSkeleton />;
   if (error) return <Error />;
@@ -51,6 +54,7 @@ export default function RoomsPage() {
   };
 
   const handleEdit = (room: TRoom) => {
+    if (!canManageUsers) return;
     setEditingRoom(room);
     setFormData({
       name: room.name,
@@ -81,16 +85,23 @@ export default function RoomsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this room?")) return;
-    try {
-      await deleteRoom(id).unwrap();
-      toast.success("Room deleted successfully!");
-    } catch (err: any) {
-      console.error("Failed to delete room:", err);
-      toast.error(
-        err?.data?.message || "Failed to delete room. Please try again."
-      );
-    }
+    if (!canManageUsers) return;
+    const room = rooms.find(r => r.id === id);
+    await confirm({
+      title: "Delete Room",
+      description: `Are you sure you want to delete "${room?.name || 'this room'}"? This action cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          await deleteRoom(id).unwrap();
+          toast.success("Room deleted successfully!");
+        } catch (err: any) {
+          console.error("Failed to delete room:", err);
+          toast.error(
+            err?.data?.message || "Failed to delete room. Please try again."
+          );
+        }
+      },
+    });
   };
 
   const containerVariants = {
@@ -240,8 +251,11 @@ export default function RoomsPage() {
           isDeleting={isDeleting}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          canManageUsers={canManageUsers}
         />
       </motion.div>
+
+      {ConfirmationDialog}
     </motion.div>
   );
 }

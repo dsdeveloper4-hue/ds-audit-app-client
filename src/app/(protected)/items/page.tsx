@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRole } from "@/hooks/useRole";
 import ItemForm from "@/components/shared/ItemForm";
+import { useConfirmationDialog } from "@/components/shared/ConfirmationDialog";
 
 export default function ItemsPage() {
   const { canManageUsers } = useRole();
@@ -42,6 +43,8 @@ export default function ItemsPage() {
     category: "",
     unit: "",
   });
+
+  const { confirm, ConfirmationDialog } = useConfirmationDialog();
 
   if (isLoading) return <ListPageSkeleton />;
   if (error) return <Error />;
@@ -59,6 +62,7 @@ export default function ItemsPage() {
   };
 
   const handleEdit = (item: TItem) => {
+    if (!canManageUsers) return;
     setEditingItem(item);
     setFormData({
       name: item.name,
@@ -89,17 +93,23 @@ export default function ItemsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this item?")) return;
-
-    try {
-      await deleteItem(id).unwrap();
-      toast.success("Item deleted successfully!");
-    } catch (err: any) {
-      console.error("Failed to delete item:", err);
-      toast.error(
-        err?.data?.message || "Failed to delete item. Please try again."
-      );
-    }
+    if (!canManageUsers) return;
+    const item = items.find(i => i.id === id);
+    await confirm({
+      title: "Delete Item",
+      description: `Are you sure you want to delete "${item?.name || 'this item'}"? This action cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          await deleteItem(id).unwrap();
+          toast.success("Item deleted successfully!");
+        } catch (err: any) {
+          console.error("Failed to delete item:", err);
+          toast.error(
+            err?.data?.message || "Failed to delete item. Please try again."
+          );
+        }
+      },
+    });
   };
 
   const containerVariants = {
@@ -204,21 +214,25 @@ export default function ItemsPage() {
                       <TableCell>{item.unit}</TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleEdit(item)}
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleDelete(item.id)}
-                            disabled={isDeleting}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          {canManageUsers && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleEdit(item)}
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDelete(item.id)}
+                                disabled={isDeleting}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </TableCell>
                     </motion.tr>
@@ -229,6 +243,8 @@ export default function ItemsPage() {
           </div>
         </Card>
       </motion.div>
+
+      {ConfirmationDialog}
     </motion.div>
   );
 }

@@ -5,14 +5,14 @@ interface TCreateUserPayload {
   name: string;
   mobile: string;
   password: string;
-  role_id: string;
+  role: string;
 }
 
 interface TUpdateUserPayload {
   name?: string;
   mobile?: string;
   password?: string;
-  role_id?: string;
+  role?: string;
 }
 
 const userApi = baseApi.injectEndpoints({

@@ -13,12 +13,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TRoom } from "@/types";
+import { useConfirmationDialog } from "@/components/shared/ConfirmationDialog";
 
 type RoomListProps = {
   rooms: TRoom[];
   isDeleting?: boolean;
   onEdit?: (room: TRoom) => void;
   onDelete?: (id: string) => void;
+  canManageUsers?: boolean;
 };
 
 export function RoomList({
@@ -26,7 +28,23 @@ export function RoomList({
   isDeleting,
   onEdit,
   onDelete,
+  canManageUsers = false,
 }: RoomListProps) {
+  const { confirm, ConfirmationDialog } = useConfirmationDialog();
+
+  const handleDelete = async (id: string) => {
+    const room = rooms.find(r => r.id === id);
+    await confirm({
+      title: "Delete Room",
+      description: `Are you sure you want to delete "${room?.name || 'this room'}"? This action cannot be undone.`,
+      onConfirm: async () => {
+        if (onDelete) {
+          onDelete(id);
+        }
+      },
+    });
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -72,7 +90,7 @@ export function RoomList({
 
                     <TableCell>
                       <div className="flex items-center justify-end gap-2">
-                        {onEdit && (
+                        {onEdit && canManageUsers && (
                           <Button
                             size="sm"
                             variant="ghost"
@@ -81,11 +99,11 @@ export function RoomList({
                             <Edit2 className="h-4 w-4" />
                           </Button>
                         )}
-                        {onDelete && (
+                        {onDelete && canManageUsers && (
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => onDelete(room.id)}
+                            onClick={() => handleDelete(room.id)}
                             disabled={isDeleting}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -100,6 +118,8 @@ export function RoomList({
           </Table>
         </div>
       </Card>
+
+      {ConfirmationDialog}
     </motion.div>
   );
 }

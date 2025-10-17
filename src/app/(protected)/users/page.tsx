@@ -27,19 +27,27 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Edit2, Trash2, X, Loader2, Users as UsersIcon } from "lucide-react";
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  X,
+  Loader2,
+  Users as UsersIcon,
+} from "lucide-react";
 import { ListPageSkeleton } from "@/components/shared/Skeletons";
 import Error from "@/components/shared/Error";
 import { TUserWithRole } from "@/types";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRole } from "@/hooks/useRole";
+import { useConfirmationDialog } from "@/components/shared/ConfirmationDialog";
 
 interface TUserFormData {
   name: string;
   mobile: string;
   password: string;
-  role_id: string;
+  role: string;
 }
 
 export default function UsersPage() {
@@ -55,8 +63,10 @@ export default function UsersPage() {
     name: "",
     mobile: "",
     password: "",
-    role_id: "",
+    role: "",
   });
+
+  const { confirm, ConfirmationDialog } = useConfirmationDialog();
 
   // Check if user has permission to access user management
   if (!canManageUsers) {
@@ -81,8 +91,10 @@ export default function UsersPage() {
 
   // Static roles based on database schema
   const roles = [
-    { id: "2", name: "ADMIN", description: "Administrator with management access" },
-    { id: "3", name: "USER", description: "Regular user with basic access" },
+    {
+      name: "ADMIN",
+    },
+    { name: "USER" },
   ];
 
   const resetForm = () => {
@@ -90,19 +102,20 @@ export default function UsersPage() {
       name: "",
       mobile: "",
       password: "",
-      role_id: "",
+      role: "",
     });
     setEditingUser(null);
     setShowForm(false);
   };
 
   const handleEdit = (user: TUserWithRole) => {
+    if (!canManageRole(user.role)) return;
     setEditingUser(user);
     setFormData({
       name: user.name,
       mobile: user.mobile,
       password: "",
-      role_id: user.role_id,
+      role: user.role,
     });
     setShowForm(true);
   };
@@ -114,7 +127,11 @@ export default function UsersPage() {
       if (editingUser) {
         const payload = formData.password
           ? formData
-          : { name: formData.name, mobile: formData.mobile, role_id: formData.role_id };
+          : {
+              name: formData.name,
+              mobile: formData.mobile,
+              role: formData.role,
+            };
         await updateUser({ id: editingUser.id, payload }).unwrap();
         toast.success("User updated successfully!");
       } else {
@@ -124,20 +141,30 @@ export default function UsersPage() {
       resetForm();
     } catch (err: any) {
       console.error("Failed to save user:", err);
-      toast.error(err?.data?.message || "Failed to save user. Please try again.");
+      toast.error(
+        err?.data?.message || "Failed to save user. Please try again."
+      );
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this user?")) return;
-
-    try {
-      await deleteUser(id).unwrap();
-      toast.success("User deleted successfully!");
-    } catch (err: any) {
-      console.error("Failed to delete user:", err);
-      toast.error(err?.data?.message || "Failed to delete user. Please try again.");
-    }
+    const user = users.find(u => u.id === id);
+    if (!canManageRole(user?.role)) return;
+    await confirm({
+      title: "Delete User",
+      description: `Are you sure you want to delete "${user?.name || 'this user'}"? This action cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          await deleteUser(id).unwrap();
+          toast.success("User deleted successfully!");
+        } catch (err: any) {
+          console.error("Failed to delete user:", err);
+          toast.error(
+            err?.data?.message || "Failed to delete user. Please try again."
+          );
+        }
+      },
+    });
   };
 
   const containerVariants = {
@@ -249,11 +276,11 @@ export default function UsersPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="role_id">Role *</Label>
+                    <Label htmlFor="role">Role *</Label>
                     <Select
-                      value={formData.role_id}
+                      value={formData.role}
                       onValueChange={(value) =>
-                        setFormData({ ...formData, role_id: value })
+                        setFormData({ ...formData, role: value })
                       }
                       required
                     >
@@ -262,7 +289,7 @@ export default function UsersPage() {
                       </SelectTrigger>
                       <SelectContent>
                         {roles.map((role, i) => (
-                          <SelectItem key={i} value={role.id}>
+                          <SelectItem key={i} value={role.name}>
                             {role.name}
                           </SelectItem>
                         ))}
@@ -372,6 +399,8 @@ export default function UsersPage() {
           </div>
         </Card>
       </motion.div>
+
+      {ConfirmationDialog}
     </motion.div>
   );
 }
