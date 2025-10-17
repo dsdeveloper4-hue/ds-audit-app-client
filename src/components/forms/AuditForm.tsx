@@ -59,7 +59,7 @@ export function AuditForm({ isOpen, onClose, audit, onSuccess }: AuditFormProps)
         await createAudit(payload).unwrap();
         toast.success("Audit created successfully!");
       }
-      
+
       onSuccess?.();
       onClose();
     } catch (error: any) {
@@ -259,9 +259,7 @@ export function AuditForm({ isOpen, onClose, audit, onSuccess }: AuditFormProps)
       {!isEditing && (
         <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md p-4">
           <div className="flex gap-3">
-            <div className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5">
-              ℹ️
-            </div>
+         
             <p className="text-sm text-blue-800 dark:text-blue-200">
               <strong>Note:</strong> Creating an audit will automatically
               generate item details for all existing rooms and items. You
