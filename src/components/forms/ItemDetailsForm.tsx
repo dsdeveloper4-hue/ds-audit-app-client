@@ -174,9 +174,7 @@ export function ItemDetailsForm({
       {!isEditing && availableItems.length === 0 && (
         <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-md p-4">
           <div className="flex gap-3">
-            <div className="h-5 w-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5">
-              ⚠️
-            </div>
+           
             <p className="text-sm text-yellow-800 dark:text-yellow-200">
               <strong>Note:</strong> All available items have already been added to this room for this audit.
             </p>

@@ -3,8 +3,6 @@
 import { useState } from "react";
 import {
   useGetAllItemsQuery,
-  useCreateItemMutation,
-  useUpdateItemMutation,
   useDeleteItemMutation,
 } from "@/redux/features/item/itemApi";
 import { Button } from "@/components/ui/button";

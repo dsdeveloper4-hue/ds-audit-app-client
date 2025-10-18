@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo } from "react";
+import { memo, } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import "@/lib/chartSetup";
@@ -21,7 +21,6 @@ interface AreaChartProps {
 function AreaChart({
   title,
   labels,
-  datasets,
   height = "45vh",
   emptyMessage = "No data available.",
 }: AreaChartProps) {

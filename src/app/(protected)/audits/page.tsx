@@ -8,7 +8,7 @@ import {
 } from "@/redux/features/audit/auditApi";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit2, Trash2, Calendar, Eye, FileText } from "lucide-react";
+import { Plus, Edit2, Trash2, Calendar,  FileText } from "lucide-react";
 import { ListPageSkeleton } from "@/components/shared/Skeletons";
 import Error from "@/components/shared/Error";
 import { PageHeader } from "@/components/shared/PageHeader";

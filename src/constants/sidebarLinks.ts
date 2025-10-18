@@ -5,6 +5,7 @@ import {
   Home,
   Package,
   DoorOpen,
+  History,
 } from "lucide-react";
 
 export const sidebarLinks = [
@@ -32,5 +33,10 @@ export const sidebarLinks = [
     title: "Users",
     href: "/users",
     icon: Users,
+  },
+  {
+    title: "Activity History",
+    href: "/history",
+    icon: History,
   },
 ];
