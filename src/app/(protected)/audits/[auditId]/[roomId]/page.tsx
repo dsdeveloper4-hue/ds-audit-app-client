@@ -30,7 +30,6 @@ import { toast } from "sonner";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRole } from "@/hooks/useRole";
 import Link from "next/link";
-import ItemForm from "@/components/shared/ItemForm";
 
 export default function ItemDetailsPage() {
   const { canManageUsers } = useRole();
@@ -53,7 +52,7 @@ export default function ItemDetailsPage() {
   const [deleteItemDetail] = useDeleteItemDetailDirectMutation();
   const { confirm, ConfirmationDialog } = useConfirmationDialog();
 
-  const [showForm, setShowForm] = useState(true);
+  const [showForm, setShowForm] = useState(false);
   const [editingItemDetail, setEditingItemDetail] =
     useState<TItemDetail | null>(null);
 
@@ -77,6 +76,11 @@ export default function ItemDetailsPage() {
 
   const handleEdit = (itemDetail: TItemDetail) => {
     setEditingItemDetail(itemDetail);
+    setShowForm(true);
+  };
+
+  const handleAddNew = () => {
+    setEditingItemDetail(null);
     setShowForm(true);
   };
 
@@ -294,47 +298,38 @@ export default function ItemDetailsPage() {
         icon={<Package className="h-8 w-8" />}
         breadcrumbs={breadcrumbs}
         actions={
-          <>
+          <div className="flex items-center gap-2">
             <Link href={`/audits/${auditId}`}>
               <Button variant="outline" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Audit
               </Button>
             </Link>
-            {canManageUsers && (
-              <>
-                <Button onClick={() => setShowForm(false)}>
-                  Add Item
-                </Button>
-                <Button onClick={() => setShowForm(true)}>
-                  Add Item Detail
-                </Button>{" "}
-              </>
+            {canManageUsers && !showForm && (
+              <Button onClick={handleAddNew}>
+                <Package className="h-4 w-4 mr-2" />
+                Add Item Detail
+              </Button>
             )}
-          </>
+          </div>
         }
       />
+
       <AnimatePresence>
-        {!showForm && (
-          <ItemForm
-            onClose={() => {
-              setShowForm(!showForm);
+        {showForm && (
+          <ItemDetailsForm
+            isOpen={showForm}
+            onClose={handleCloseForm}
+            itemDetail={editingItemDetail || undefined}
+            auditId={auditId}
+            roomId={roomId}
+            existingItemIds={existingItemIds}
+            onSuccess={() => {
+              handleCloseForm();
             }}
           />
         )}
       </AnimatePresence>
-
-      <ItemDetailsForm
-        isOpen={showForm}
-        onClose={handleCloseForm}
-        itemDetail={editingItemDetail || undefined}
-        auditId={auditId}
-        roomId={roomId}
-        existingItemIds={existingItemIds}
-        onSuccess={() => {
-          // Refresh data is handled by RTK Query cache invalidation
-        }}
-      />
 
       <StatisticsCards cards={statisticsCards} />
 
