@@ -80,7 +80,7 @@ export function ItemDetailsForm({
         await createItemDetail(createPayload).unwrap();
         toast.success("Item detail created successfully!");
       }
-      
+
       onSuccess?.();
       onClose();
     } catch (error: any) {
@@ -91,7 +91,7 @@ export function ItemDetailsForm({
     }
   };
 
-  const availableItems = items.filter(item => 
+  const availableItems = items.filter(item =>
     isEditing ? item.id === itemDetail?.item_id : !existingItemIds.includes(item.id)
   );
 
@@ -131,13 +131,11 @@ export function ItemDetailsForm({
             </SelectContent>
           </Select>
         </div>
-        
+
         <div className="space-y-2">
           <Label htmlFor="active_quantity">Active Quantity</Label>
           <Input
             id="active_quantity"
-            type="number"
-            min="0"
             value={formData.active_quantity}
             onChange={(e) =>
               setFormData({ ...formData, active_quantity: parseInt(e.target.value) || 0 })
@@ -152,8 +150,6 @@ export function ItemDetailsForm({
           <Label htmlFor="broken_quantity">Broken Quantity</Label>
           <Input
             id="broken_quantity"
-            type="number"
-            min="0"
             value={formData.broken_quantity}
             onChange={(e) =>
               setFormData({ ...formData, broken_quantity: parseInt(e.target.value) || 0 })
@@ -161,13 +157,11 @@ export function ItemDetailsForm({
             placeholder="0"
           />
         </div>
-        
+
         <div className="space-y-2">
           <Label htmlFor="inactive_quantity">Inactive Quantity</Label>
           <Input
             id="inactive_quantity"
-            type="number"
-            min="0"
             value={formData.inactive_quantity}
             onChange={(e) =>
               setFormData({ ...formData, inactive_quantity: parseInt(e.target.value) || 0 })

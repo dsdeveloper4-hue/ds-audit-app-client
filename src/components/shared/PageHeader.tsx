@@ -1,7 +1,6 @@
 "use client";
 
 import { ReactNode } from "react";
-import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
@@ -79,7 +78,7 @@ export function PageHeader({
             </div>
           )}
         </div>
-        
+
         {actions && (
           <div className="flex items-center gap-2">
             {actions}

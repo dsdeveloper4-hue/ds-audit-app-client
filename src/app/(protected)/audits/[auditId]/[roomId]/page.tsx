@@ -2,19 +2,23 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import {
-  useGetRoomByIdQuery,
-} from "@/redux/features/room/roomApi";
-import {
-  useGetAuditByIdQuery,
-} from "@/redux/features/audit/auditApi";
+import { useGetRoomByIdQuery } from "@/redux/features/room/roomApi";
+import { useGetAuditByIdQuery } from "@/redux/features/audit/auditApi";
 import {
   useGetAllItemDetailsQuery,
   useDeleteItemDetailDirectMutation,
 } from "@/redux/features/itemDetails/itemDetailsApi";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit2, Trash2, Package, ArrowLeft, Building, Calendar } from "lucide-react";
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Package,
+  ArrowLeft,
+  Building,
+  Calendar,
+} from "lucide-react";
 import { ListPageSkeleton } from "@/components/shared/Skeletons";
 import Error from "@/components/shared/Error";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -24,9 +28,10 @@ import { useConfirmationDialog } from "@/components/shared/ConfirmationDialog";
 import { ItemDetailsForm } from "@/components/forms/ItemDetailsForm";
 import { TItemDetail } from "@/types";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useRole } from "@/hooks/useRole";
 import Link from "next/link";
+import ItemForm from "@/components/shared/ItemForm";
 
 export default function ItemDetailsPage() {
   const { canManageUsers } = useRole();
@@ -35,26 +40,35 @@ export default function ItemDetailsPage() {
   const roomId = params.roomId as string;
 
   // API queries
-  const { data: roomData, isLoading: roomLoading } = useGetRoomByIdQuery(roomId);
-  const { data: auditData, isLoading: auditLoading } = useGetAuditByIdQuery(auditId);
-  const { data: itemDetailsData, isLoading: itemDetailsLoading, error } = useGetAllItemDetailsQuery();
+  const { data: roomData, isLoading: roomLoading } =
+    useGetRoomByIdQuery(roomId);
+  const { data: auditData, isLoading: auditLoading } =
+    useGetAuditByIdQuery(auditId);
+  const {
+    data: itemDetailsData,
+    isLoading: itemDetailsLoading,
+    error,
+  } = useGetAllItemDetailsQuery();
 
   // API mutations
   const [deleteItemDetail] = useDeleteItemDetailDirectMutation();
   const { confirm, ConfirmationDialog } = useConfirmationDialog();
 
-  const [showForm, setShowForm] = useState(false);
-  const [editingItemDetail, setEditingItemDetail] = useState<TItemDetail | null>(null);
+  const [showForm, setShowForm] = useState(true);
+  const [editingItemDetail, setEditingItemDetail] =
+    useState<TItemDetail | null>(null);
 
   // Filter item details for current room and audit
-  const filteredItemDetails = itemDetailsData?.data?.filter(
-    (detail) => detail.room_id === roomId && detail.audit_id === auditId
-  ) || [];
+  const filteredItemDetails =
+    itemDetailsData?.data?.filter(
+      (detail) => detail.room_id === roomId && detail.audit_id === auditId
+    ) || [];
 
   const room = roomData?.data;
   const audit = auditData?.data;
 
-  if (roomLoading || auditLoading || itemDetailsLoading) return <ListPageSkeleton />;
+  if (roomLoading || auditLoading || itemDetailsLoading)
+    return <ListPageSkeleton />;
   if (error) return <Error />;
 
   const handleCloseForm = () => {
@@ -66,7 +80,6 @@ export default function ItemDetailsPage() {
     setEditingItemDetail(itemDetail);
     setShowForm(true);
   };
-
 
   const handleDelete = (itemDetail: TItemDetail) => {
     const itemName = itemDetail.item?.name || "Unknown Item";
@@ -83,17 +96,36 @@ export default function ItemDetailsPage() {
   };
 
   const getTotalQuantity = (itemDetail: TItemDetail) => {
-    return itemDetail.active_quantity + itemDetail.broken_quantity + itemDetail.inactive_quantity;
+    return (
+      itemDetail.active_quantity +
+      itemDetail.broken_quantity +
+      itemDetail.inactive_quantity
+    );
   };
 
-
-  const existingItemIds = filteredItemDetails.map(detail => detail.item_id);
+  const existingItemIds = filteredItemDetails.map((detail) => detail.item_id);
 
   const statistics = {
-    totalActive: filteredItemDetails.reduce((sum, detail) => sum + detail.active_quantity, 0),
-    totalBroken: filteredItemDetails.reduce((sum, detail) => sum + detail.broken_quantity, 0),
-    totalInactive: filteredItemDetails.reduce((sum, detail) => sum + detail.inactive_quantity, 0),
-    grandTotal: filteredItemDetails.reduce((sum, detail) => sum + (detail.active_quantity + detail.broken_quantity + detail.inactive_quantity), 0),
+    totalActive: filteredItemDetails.reduce(
+      (sum, detail) => sum + detail.active_quantity,
+      0
+    ),
+    totalBroken: filteredItemDetails.reduce(
+      (sum, detail) => sum + detail.broken_quantity,
+      0
+    ),
+    totalInactive: filteredItemDetails.reduce(
+      (sum, detail) => sum + detail.inactive_quantity,
+      0
+    ),
+    grandTotal: filteredItemDetails.reduce(
+      (sum, detail) =>
+        sum +
+        (detail.active_quantity +
+          detail.broken_quantity +
+          detail.inactive_quantity),
+      0
+    ),
   };
 
   const statisticsCards = [
@@ -136,18 +168,20 @@ export default function ItemDetailsPage() {
     {
       key: "category",
       header: "Category",
-      render: (itemDetail: TItemDetail) => (
+      render: (itemDetail: TItemDetail) =>
         itemDetail.item?.category ? (
           <Badge variant="secondary">{itemDetail.item.category}</Badge>
-        ) : null
-      ),
+        ) : null,
     },
     {
       key: "active_quantity",
       header: "Active",
       className: "text-center",
       render: (itemDetail: TItemDetail) => (
-        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+        <Badge
+          variant="outline"
+          className="bg-green-50 text-green-700 border-green-200"
+        >
           {itemDetail.active_quantity}
         </Badge>
       ),
@@ -157,7 +191,10 @@ export default function ItemDetailsPage() {
       header: "Broken",
       className: "text-center",
       render: (itemDetail: TItemDetail) => (
-        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+        <Badge
+          variant="outline"
+          className="bg-red-50 text-red-700 border-red-200"
+        >
           {itemDetail.broken_quantity}
         </Badge>
       ),
@@ -167,7 +204,10 @@ export default function ItemDetailsPage() {
       header: "Inactive",
       className: "text-center",
       render: (itemDetail: TItemDetail) => (
-        <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+        <Badge
+          variant="outline"
+          className="bg-gray-50 text-gray-700 border-gray-200"
+        >
           {itemDetail.inactive_quantity}
         </Badge>
       ),
@@ -177,7 +217,10 @@ export default function ItemDetailsPage() {
       header: "Total",
       className: "text-center",
       render: (itemDetail: TItemDetail) => (
-        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-semibold">
+        <Badge
+          variant="outline"
+          className="bg-blue-50 text-blue-700 border-blue-200 font-semibold"
+        >
           {getTotalQuantity(itemDetail)}
         </Badge>
       ),
@@ -186,7 +229,7 @@ export default function ItemDetailsPage() {
       key: "actions",
       header: "Actions",
       className: "text-right",
-      render: (itemDetail: TItemDetail) => (
+      render: (itemDetail: TItemDetail) =>
         canManageUsers ? (
           <div className="flex items-center justify-end gap-2">
             <Button
@@ -204,8 +247,7 @@ export default function ItemDetailsPage() {
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
-        ) : null
-      ),
+        ) : null,
     },
   ];
 
@@ -227,11 +269,15 @@ export default function ItemDetailsPage() {
     <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
       <div className="flex items-center gap-1">
         <Building className="h-4 w-4" />
-        <span>{room?.name} - {room?.department}</span>
+        <span>
+          {room?.name} - {room?.department}
+        </span>
       </div>
       <div className="flex items-center gap-1">
         <Calendar className="h-4 w-4" />
-        <span>{audit?.month} {audit?.year}</span>
+        <span>
+          {audit?.month} {audit?.year}
+        </span>
       </div>
     </div>
   );
@@ -257,14 +303,27 @@ export default function ItemDetailsPage() {
               </Button>
             </Link>
             {canManageUsers && (
-              <Button onClick={() => setShowForm(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Item Detail
-              </Button>
+              <>
+                <Button onClick={() => setShowForm(false)}>
+                  Add Item
+                </Button>
+                <Button onClick={() => setShowForm(true)}>
+                  Add Item Detail
+                </Button>{" "}
+              </>
             )}
           </>
         }
       />
+      <AnimatePresence>
+        {!showForm && (
+          <ItemForm
+            onClose={() => {
+              setShowForm(!showForm);
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       <ItemDetailsForm
         isOpen={showForm}
@@ -284,7 +343,9 @@ export default function ItemDetailsPage() {
         data={filteredItemDetails}
         columns={columns}
         title="Item Details"
-        subtitle={`${filteredItemDetails.length} item${filteredItemDetails.length !== 1 ? 's' : ''} tracked`}
+        subtitle={`${filteredItemDetails.length} item${
+          filteredItemDetails.length !== 1 ? "s" : ""
+        } tracked`}
         emptyMessage="No item details found for this room. Add your first item detail to get started."
         emptyIcon={<Package className="h-12 w-12 text-gray-300" />}
       />

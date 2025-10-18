@@ -25,64 +25,64 @@ function AreaChart({
   height = "45vh",
   emptyMessage = "No data available.",
 }: AreaChartProps) {
-  const chartData = useMemo(
-    () => ({
-      labels,
-      datasets,
-    }),
-    [labels, datasets]
-  );
+  // const chartData = useMemo(
+  //   () => ({
+  //     labels,
+  //     datasets,
+  //   }),
+  //   [labels, datasets]
+  // );
 
-  const chartOptions = useMemo(
-    () => ({
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: "top" as const,
-          labels: {
-            padding: 20,
-            usePointStyle: true,
-            font: {
-              size: 12,
-            },
-          },
-        },
-        tooltip: {
-          mode: "index" as const,
-          intersect: false,
-          backgroundColor: "rgba(0, 0, 0, 0.8)",
-          titleColor: "#ffffff",
-          bodyColor: "#ffffff",
-        },
-      },
-      scales: {
-        x: {
-          grid: { display: false },
-          ticks: { color: "#6B7280" },
-        },
-        y: {
-          beginAtZero: true,
-          grid: { color: "#E5E7EB", drawBorder: false },
-          ticks: { color: "#6B7280" },
-        },
-      },
-      interaction: {
-        intersect: false,
-        mode: "nearest" as const,
-      },
-      elements: {
-        point: {
-          radius: 4,
-          hoverRadius: 6,
-        },
-        line: {
-          tension: 0.4,
-        },
-      },
-    }),
-    []
-  );
+  // const chartOptions = useMemo(
+  //   () => ({
+  //     responsive: true,
+  //     maintainAspectRatio: false,
+  //     plugins: {
+  //       legend: {
+  //         position: "top" as const,
+  //         labels: {
+  //           padding: 20,
+  //           usePointStyle: true,
+  //           font: {
+  //             size: 12,
+  //           },
+  //         },
+  //       },
+  //       tooltip: {
+  //         mode: "index" as const,
+  //         intersect: false,
+  //         backgroundColor: "rgba(0, 0, 0, 0.8)",
+  //         titleColor: "#ffffff",
+  //         bodyColor: "#ffffff",
+  //       },
+  //     },
+  //     scales: {
+  //       x: {
+  //         grid: { display: false },
+  //         ticks: { color: "#6B7280" },
+  //       },
+  //       y: {
+  //         beginAtZero: true,
+  //         grid: { color: "#E5E7EB", drawBorder: false },
+  //         ticks: { color: "#6B7280" },
+  //       },
+  //     },
+  //     interaction: {
+  //       intersect: false,
+  //       mode: "nearest" as const,
+  //     },
+  //     elements: {
+  //       point: {
+  //         radius: 4,
+  //         hoverRadius: 6,
+  //       },
+  //       line: {
+  //         tension: 0.4,
+  //       },
+  //     },
+  //   }),
+  //   []
+  // );
 
   return (
     <motion.div

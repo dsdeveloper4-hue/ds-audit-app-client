@@ -28,7 +28,7 @@ export default function AuditDetailsPage() {
   const { data: auditData, isLoading: auditLoading } = useGetAuditByIdQuery(
     String(id)
   );
-  const { data: rooms, isLoading, error } = useGetAllRoomsQuery();
+  const { data: rooms, } = useGetAllRoomsQuery();
   const allRooms = rooms?.data || [];
 
   if (auditLoading) return <Loading />;

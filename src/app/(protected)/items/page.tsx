@@ -19,10 +19,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Edit2, Trash2, X, Loader2, Package } from "lucide-react";
+import { Plus, Edit2, Trash2,  Package } from "lucide-react";
 import { ListPageSkeleton } from "@/components/shared/Skeletons";
 import Error from "@/components/shared/Error";
-import { TItem, TCreateItemPayload } from "@/types";
+import { TItem, } from "@/types";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRole } from "@/hooks/useRole";
@@ -32,17 +32,11 @@ import { useConfirmationDialog } from "@/components/shared/ConfirmationDialog";
 export default function ItemsPage() {
   const { canManageUsers } = useRole();
   const { data, isLoading, error } = useGetAllItemsQuery();
-  const [createItem] = useCreateItemMutation();
-  const [updateItem] = useUpdateItemMutation();
+
   const [deleteItem, { isLoading: isDeleting }] = useDeleteItemMutation();
 
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<TItem | null>(null);
-  const [formData, setFormData] = useState<TCreateItemPayload>({
-    name: "",
-    category: "",
-    unit: "",
-  });
 
   const { confirm, ConfirmationDialog } = useConfirmationDialog();
 
@@ -51,46 +45,33 @@ export default function ItemsPage() {
 
   const items = data?.data || [];
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      category: "",
-      unit: "",
-    });
-    setEditingItem(null);
-    setShowForm(false);
-  };
+
 
   const handleEdit = (item: TItem) => {
     if (!canManageUsers) return;
     setEditingItem(item);
-    setFormData({
-      name: item.name,
-      category: item.category || "",
-      unit: item.unit || "",
-    });
     setShowForm(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
 
-    try {
-      if (editingItem) {
-        await updateItem({ id: editingItem.id, payload: formData }).unwrap();
-        toast.success("Item updated successfully!");
-      } else {
-        await createItem(formData).unwrap();
-        toast.success("Item created successfully!");
-      }
-      resetForm();
-    } catch (err: any) {
-      console.error("Failed to save item:", err);
-      toast.error(
-        err?.data?.message || "Failed to save item. Please try again."
-      );
-    }
-  };
+  //   try {
+  //     if (editingItem) {
+  //       await updateItem({ id: editingItem.id, payload: formData }).unwrap();
+  //       toast.success("Item updated successfully!");
+  //     } else {
+  //       await createItem(formData).unwrap();
+  //       toast.success("Item created successfully!");
+  //     }
+  //     resetForm();
+  //   } catch (err: any) {
+  //     console.error("Failed to save item:", err);
+  //     toast.error(
+  //       err?.data?.message || "Failed to save item. Please try again."
+  //     );
+  //   }
+  // };
 
   const handleDelete = async (id: string) => {
     if (!canManageUsers) return;

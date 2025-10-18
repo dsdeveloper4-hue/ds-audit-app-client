@@ -38,7 +38,6 @@ export function DataTable<T extends Record<string, any>>({
   subtitle,
   emptyMessage = "No data found",
   emptyIcon,
-  isLoading = false,
   actions,
   className,
 }: DataTableProps<T>) {

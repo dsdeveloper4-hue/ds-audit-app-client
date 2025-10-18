@@ -8,7 +8,7 @@ import {
 } from "@/redux/features/audit/auditApi";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit2, Trash2, Calendar, Eye } from "lucide-react";
+import { Plus, Edit2, Trash2, Calendar, Eye, FileText } from "lucide-react";
 import { ListPageSkeleton } from "@/components/shared/Skeletons";
 import Error from "@/components/shared/Error";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -93,11 +93,10 @@ export default function AuditsPage() {
     {
       key: "created_at",
       header: "Audit Date",
-      render: (audit: TAudit) => (
+      render: (audit: TAudit) =>
         audit.created_at
           ? new Date(audit.created_at).toLocaleDateString()
-          : "N/A"
-      ),
+          : "N/A",
     },
     {
       key: "month",
@@ -112,19 +111,16 @@ export default function AuditsPage() {
     {
       key: "participants",
       header: "Conducted By",
-      render: (audit: TAudit) => (
+      render: (audit: TAudit) =>
         audit.participants && audit.participants.length > 0
           ? audit.participants.map((p) => p.name).join(", ")
-          : "Not assigned"
-      ),
+          : "Not assigned",
     },
     {
       key: "notes",
       header: "Notes",
       render: (audit: TAudit) => (
-        <span className="truncate max-w-xs block">
-          {audit.notes || "—"}
-        </span>
+        <span className="truncate max-w-xs block">{audit.notes || "—"}</span>
       ),
     },
     {
@@ -135,28 +131,36 @@ export default function AuditsPage() {
         <div className="flex items-center justify-end gap-2">
           <Button
             size="sm"
-            variant="ghost"
+            variant="outline"
+            className="border-primary text-primary hover:bg-primary hover:text-white transition-colors"
             onClick={() => router.push(`/audits/${audit.id}`)}
           >
-            <Eye className="h-4 w-4" />
+            <FileText className="h-4 w-4 mr-2" />
+            View Audit
           </Button>
+
           {canManageUsers && (
-            <>
+            <div className="flex items-center gap-1">
               <Button
-                size="sm"
+                size="icon"
                 variant="ghost"
+                className="hover:bg-blue-50 hover:text-blue-600"
                 onClick={() => handleEdit(audit)}
+                title="Edit Audit"
               >
                 <Edit2 className="h-4 w-4" />
               </Button>
+
               <Button
-                size="sm"
-                variant="destructive"
+                size="icon"
+                variant="ghost"
+                className="hover:bg-red-50 hover:text-red-600"
                 onClick={() => handleDelete(audit)}
+                title="Delete Audit"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
-            </>
+            </div>
           )}
         </div>
       ),
