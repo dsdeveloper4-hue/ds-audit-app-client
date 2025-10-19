@@ -2,11 +2,24 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { useGetLatestAuditQuery } from "@/redux/features/audit/auditApi";
+import {
+  useGetAllAuditsQuery,
+  useGetAuditByIdQuery,
+  useGetLatestAuditQuery,
+} from "@/redux/features/audit/auditApi";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { ListPageSkeleton } from "@/components/shared/Skeletons";
 import Error from "@/components/shared/Error";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   BarChart,
   Bar,
@@ -27,21 +40,65 @@ import {
   AlertCircle,
   CheckCircle,
   XCircle,
+  ChevronDown,
+  Loader2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const COLORS = {
-  active: "#10b981",
-  broken: "#ef4444",
-  inactive: "#6b7280",
-  total: "#3b82f6",
+  active: "#059669", // Darker green, professional & modern
+  broken: "#B91C1C", // Dark red, serious tone
+  inactive: "#374151", // Dark gray, sleek & muted
+  total: "#1D4ED8", // Deep blue, professional highlight
 };
 
-const STATUS_SUMMARY_COLORS = ["#14b8a6", "#f97316", "#94a3b8"];
+
+const STATUS_SUMMARY_COLORS = [
+  "#10B981", // Active light
+  "#EF4444", // Broken light
+  "#9CA3AF", // Inactive light
+];
+
 
 const DashboardPage = () => {
-  const { data, isLoading, error } = useGetLatestAuditQuery();
-  const audit = data?.data;
+  const {
+    data: latestAuditResponse,
+    isLoading: isLatestLoading,
+    error: latestError,
+  } = useGetLatestAuditQuery();
+  const {
+    data: auditsResponse,
+    isLoading: isAuditsLoading,
+    error: auditsError,
+  } = useGetAllAuditsQuery();
+  const [selectedAuditId, setSelectedAuditId] = React.useState<string | null>(null);
+  const {
+    data: selectedAuditResponse,
+    isFetching: isSelectedAuditFetching,
+    error: selectedAuditError,
+  } = useGetAuditByIdQuery(selectedAuditId ?? "", {
+    skip: !selectedAuditId,
+  });
+
+  const auditOptions = React.useMemo(
+    () =>
+      (auditsResponse?.data ?? []).map((auditOption) => ({
+        id: auditOption.id,
+        label: `Audit ${auditOption.month}/${auditOption.year}`,
+        status: auditOption.status,
+      })),
+    [auditsResponse]
+  );
+
+  const audit = React.useMemo(() => {
+    if (selectedAuditId) {
+      if (selectedAuditId === latestAuditResponse?.data?.id) {
+        return latestAuditResponse?.data ?? null;
+      }
+      return selectedAuditResponse?.data ?? null;
+    }
+    return latestAuditResponse?.data ?? null;
+  }, [selectedAuditId, selectedAuditResponse, latestAuditResponse]);
 
   const roomItemData = React.useMemo(
     () =>
@@ -139,8 +196,16 @@ const DashboardPage = () => {
     [totalStatusItems]
   );
 
-  if (isLoading) return <ListPageSkeleton />;
-  if (error) return <Error />;
+  const combinedError = latestError || auditsError || selectedAuditError;
+  const isInitialLoading = isLatestLoading || isAuditsLoading;
+  const isSwitchingAudit = selectedAuditId
+    ? selectedAuditId !== latestAuditResponse?.data?.id &&
+      isSelectedAuditFetching &&
+      !selectedAuditResponse?.data
+    : false;
+
+  if (combinedError) return <Error />;
+  if (isInitialLoading || isSwitchingAudit) return <ListPageSkeleton />;
 
   if (!audit) {
     return (
@@ -152,6 +217,66 @@ const DashboardPage = () => {
       </div>
     );
   }
+
+  const selectedAuditOption = auditOptions.find((option) => option.id === selectedAuditId);
+  const dropdownLabel = selectedAuditOption?.label
+    ?? (latestAuditResponse?.data
+      ? `Audit ${latestAuditResponse.data.month}/${latestAuditResponse.data.year}`
+      : "Select audit");
+  const isAuditSelectorDisabled = auditOptions.length === 0;
+  const isAuditSwitcherBusy = isAuditsLoading || (selectedAuditId ? isSelectedAuditFetching : false);
+
+  const auditSwitcher = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={isAuditSelectorDisabled || isInitialLoading}
+          className="justify-start"
+        >
+          {isAuditSwitcherBusy ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <LayoutDashboard className="h-4 w-4 text-primary" />
+          )}
+          <span className="text-sm font-medium">{dropdownLabel}</span>
+          <ChevronDown className="h-4 w-4 opacity-60" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-60">
+        <DropdownMenuLabel>Switch audit</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {auditOptions.length > 0 ? (
+          auditOptions.map((option) => {
+            const isCurrent = selectedAuditId
+              ? option.id === selectedAuditId
+              : option.id === latestAuditResponse?.data?.id;
+            return (
+              <DropdownMenuItem
+                key={option.id}
+                onSelect={() =>
+                  setSelectedAuditId((current) =>
+                    option.id === latestAuditResponse?.data?.id ? null : option.id
+                  )
+                }
+                className={isCurrent ? "font-semibold" : undefined}
+              >
+                <div className="flex w-full items-center justify-between">
+                  <span>{option.label}</span>
+                  <Badge variant={option.status === "COMPLETED" ? "default" : "secondary"}>
+                    {option.status.replace("_", " ")}
+                  </Badge>
+                </div>
+              </DropdownMenuItem>
+            );
+          })
+        ) : (
+          <DropdownMenuItem disabled>No audits available</DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 
   // Transform data for Room-Item Count Chart (Bar Chart)
 
@@ -203,6 +328,7 @@ const DashboardPage = () => {
           </div>
         }
         icon={<LayoutDashboard className="h-8 w-8" />}
+        actions={auditSwitcher}
       />
 
       {/* Summary Cards */}

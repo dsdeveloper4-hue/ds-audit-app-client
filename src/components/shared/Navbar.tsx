@@ -5,6 +5,7 @@ import { useLogoutMutation } from "@/redux/features/auth/authApi";
 import { logout as logoutAction } from "@/redux/features/auth/authSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { LogOut, User } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -28,8 +29,9 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 right-0 h-16 bg-white dark:bg-gray-900 border-b shadow-sm z-50 flex items-center justify-between px-6">
       {/* Brand / Logo */}
       <div className="flex items-center space-x-2">
-        <Link href={"/"} className="text-lg font-semibold text-primary">
-          DIGITAL SEBA
+        <Link href={"/"} className="text-lg font-semibold text-primary flex items-center gap-2">
+         <Image src={"/logo.png"} width={50} height={50} alt="Logo" />
+         DIGITAL SEBA
         </Link>
       </div>
 

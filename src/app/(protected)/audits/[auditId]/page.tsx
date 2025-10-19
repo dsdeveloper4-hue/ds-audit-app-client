@@ -23,12 +23,14 @@ import { useGetAllRoomsQuery } from "@/redux/features";
 import Link from "next/link";
 
 export default function AuditDetailsPage() {
-  const {auditId:id} = useParams();
+  const { auditId: id } = useParams();
   const router = useRouter();
+
   const { data: auditData, isLoading: auditLoading } = useGetAuditByIdQuery(
     String(id)
   );
-  const { data: rooms, } = useGetAllRoomsQuery();
+  const { data: rooms } = useGetAllRoomsQuery();
+
   const allRooms = rooms?.data || [];
 
   if (auditLoading) return <Loading />;
@@ -70,6 +72,7 @@ export default function AuditDetailsPage() {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Audits
         </Button>
+
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -124,6 +127,7 @@ export default function AuditDetailsPage() {
         )}
       </Card>
 
+      {/* Room Table */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -137,6 +141,7 @@ export default function AuditDetailsPage() {
                   <TableHead>Room Name</TableHead>
                   <TableHead>Floor</TableHead>
                   <TableHead>Department</TableHead>
+                  <TableHead>Total Items</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -154,29 +159,39 @@ export default function AuditDetailsPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  allRooms.map((room, index) => (
-                    <motion.tr
-                      key={room.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="border-b hover:bg-gray-50 dark:hover:bg-gray-900"
-                    >
-                      <TableCell className="font-medium">{room.name}</TableCell>
-                      <TableCell>{room.floor || "—"}</TableCell>
-                      <TableCell>{room.department || "—"}</TableCell>
+                  allRooms.map((room, index) => {
+                    const roomItemCount = itemDetails.filter(
+                      (item) => item.room_id === room.id
+                    ).length;
 
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-2">
-                        <Link href={`/audits/${id}/${room.id}`}>
-                            <Button size="sm" >
-                              View
-                            </Button>
-                          </Link>
-                        </div>
-                      </TableCell>
-                    </motion.tr>
-                  ))
+                    return (
+                      <motion.tr
+                        key={room.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="border-b hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+                      >
+                        <TableCell className="font-medium">
+                          {room.name}
+                        </TableCell>
+                        <TableCell>{room.floor || "—"}</TableCell>
+                        <TableCell>{room.department || "—"}</TableCell>
+                        <TableCell className="font-xl">
+                          {roomItemCount}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-end gap-2">
+                            <Link href={`/audits/${id}/${room.id}`}>
+                              <Button size="sm" variant="default">
+                                View
+                              </Button>
+                            </Link>
+                          </div>
+                        </TableCell>
+                      </motion.tr>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>

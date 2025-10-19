@@ -12,17 +12,19 @@ import { useLoginMutation } from "@/redux/features/auth/authApi";
 import { useAppDispatch } from "@/redux/hook";
 import { setUser } from "@/redux/features/auth/authSlice";
 import { verifyToken } from "@/utils/verifyToken";
-
+import Image from "next/image";
 
 const defaultValues = {
-   mobile:"01617134236",
-    password:"sajukhan"
-}
+  mobile: "01617134236",
+  password: "sajukhan",
+};
+
 export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [login, { isLoading }] = useLoginMutation();
   const dispatch = useAppDispatch();
+
   const handleLogin = async (data: LoginFormData) => {
     setError(null);
     try {
@@ -40,32 +42,40 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 px-4">
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950 px-4 relative">
+      {/* Optional subtle background effect */}
+      <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-white to-teal-50 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 opacity-30 blur-3xl -z-10"></div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        whileHover={{ scale: 1.02 }}
         className="w-full max-w-md"
       >
-        <Card className="shadow-lg rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden py-0">
+        <Card className="shadow-2xl rounded-3xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           {/* Header */}
-          <div className="bg-indigo-600 dark:bg-indigo-500 text-white text-center py-8 px-6">
-            <h1 className="text-3xl font-bold">Digital Seba</h1>
-            <p className="mt-2 text-sm opacity-90">
+          <div className=" text-center px-6 relative">
+            <Image
+              src="/logo.png"
+              width={100}
+              height={100}
+              alt="Logo"
+              className="mx-auto mb-5"
+            />
+            <h2 className="text-2xl font-semibold tracking-tight">
               Audit Management System
-            </p>
-            <p className="mt-1 text-xs opacity-75">
-              Please login to continue
-            </p>
+            </h2>
+            <p className="mt-1 text-sm opacity-80">Please login to continue</p>
           </div>
 
           {/* Form */}
-          <CardContent className="p-6">
+          <CardContent className="p-8 bg-white dark:bg-gray-900">
             <FormWrapper
               schema={loginSchema}
               onSubmit={handleLogin}
               defaultValues={defaultValues}
-              className="bg-white dark:bg-gray-900"
+              className="space-y-4"
             >
               {(control, handleSubmit) => (
                 <>
@@ -85,12 +95,11 @@ export default function LoginPage() {
                   />
 
                   {error && (
-                    <p className="text-red-600 text-sm font-medium mt-2">
+                    <p className="text-red-600 text-sm font-medium mt-1">
                       {error}
                     </p>
                   )}
 
-                  {/* Submit Button */}
                   <Button
                     type="submit"
                     onClick={(e) => handleSubmit(e as any)}
@@ -104,7 +113,7 @@ export default function LoginPage() {
             </FormWrapper>
 
             {/* Footer */}
-            <p className="mt-4 text-center text-gray-500 text-sm">
+            <p className="mt-6 text-center text-gray-400 dark:text-gray-400 text-sm">
               &copy; {new Date().getFullYear()} Digital Seba. All rights
               reserved.
             </p>

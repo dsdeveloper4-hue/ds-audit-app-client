@@ -17,6 +17,9 @@ export const metadata: Metadata = {
     default: "Digital Seba - Audit Management",
     template: "%s | Digital Seba",
   },
+  icons: {
+    icon: "/favicon.ico", // <-- favicon here
+  },
   description:
     "Digital Seba Audit Management System - Track inventory audits, manage rooms, items, and monitor stock levels across your organization.",
 };

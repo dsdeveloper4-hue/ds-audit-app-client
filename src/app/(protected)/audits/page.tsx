@@ -153,7 +153,7 @@ export default function AuditsPage() {
 
               <Button
                 size="icon"
-                variant="ghost"
+                variant="destructive"
                 className="hover:bg-red-50 hover:text-red-600"
                 onClick={() => handleDelete(audit)}
                 title="Delete Audit"
