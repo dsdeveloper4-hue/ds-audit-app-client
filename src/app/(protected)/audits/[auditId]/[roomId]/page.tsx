@@ -17,6 +17,8 @@ import {
   ArrowLeft,
   Building,
   Calendar,
+  PlusCircle,
+  X,
 } from "lucide-react";
 import { ListPageSkeleton } from "@/components/shared/Skeletons";
 import Error from "@/components/shared/Error";
@@ -25,11 +27,13 @@ import { DataTable } from "@/components/shared/DataTable";
 import { StatisticsCards } from "@/components/shared/StatisticsCards";
 import { useConfirmationDialog } from "@/components/shared/ConfirmationDialog";
 import { ItemDetailsForm } from "@/components/forms/ItemDetailsForm";
-import { TItemDetail } from "@/types";
+import ItemForm from "@/components/forms/ItemForm";
+import { TCreateItemPayload, TItemDetail } from "@/types";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRole } from "@/hooks/useRole";
 import Link from "next/link";
+import { useCreateItemMutation } from "@/redux/features/item/itemApi";
 
 export default function ItemDetailsPage() {
   const { canManageUsers } = useRole();
@@ -53,8 +57,11 @@ export default function ItemDetailsPage() {
   const { confirm, ConfirmationDialog } = useConfirmationDialog();
 
   const [showForm, setShowForm] = useState(false);
+  const [showCreateItemForm, setShowCreateItemForm] = useState(false);
   const [editingItemDetail, setEditingItemDetail] =
     useState<TItemDetail | null>(null);
+  const [createItem, { isLoading: createItemLoading }] =
+    useCreateItemMutation();
 
   // Filter item details for current room and audit
   const filteredItemDetails =
@@ -96,6 +103,16 @@ export default function ItemDetailsPage() {
         toast.success("Item detail deleted successfully!");
       },
     });
+  };
+
+  const handleCreateItemSubmit = async (data: TCreateItemPayload) => {
+    try {
+      await createItem(data).unwrap();
+      toast.success("Item created successfully!");
+      setShowCreateItemForm(false);
+    } catch (error) {
+      toast.error("Failed to create item. Please try again.");
+    }
   };
 
   const getTotalQuantity = (itemDetail: TItemDetail) => {
@@ -298,22 +315,69 @@ export default function ItemDetailsPage() {
         icon={<Package className="h-8 w-8" />}
         breadcrumbs={breadcrumbs}
         actions={
-          <div className="flex items-center gap-2">
-            <Link href={`/audits/${auditId}`}>
-              <Button variant="outline" size="sm">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Link href={`/audits/${auditId}`} className="sm:w-auto">
+              <Button variant="outline" size="sm" className="w-full">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Audit
               </Button>
             </Link>
             {canManageUsers && !showForm && (
-              <Button onClick={handleAddNew}>
-                <Package className="h-4 w-4 mr-2" />
-                Add Item Detail
-              </Button>
+              <>
+                <Button onClick={handleAddNew} className="w-full sm:w-auto">
+                  <Package className="h-4 w-4 mr-2" />
+                  Add Item Detail
+                </Button>
+              </>
             )}
           </div>
         }
       />
+
+      {canManageUsers && (
+        <motion.section
+          className="space-y-4 rounded-xl border border-dashed border-primary/20 bg-background p-4 shadow-sm sm:p-6"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Create New Item
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Add a reusable item to keep your inventory organized across rooms.
+              </p>
+            </div>
+            <Button
+              variant={showCreateItemForm ? "secondary" : "default"}
+              onClick={() => setShowCreateItemForm((prev) => !prev)}
+              className="w-full sm:w-auto"
+            >
+              {showCreateItemForm ? (
+                <>
+                  <X className="mr-2 h-4 w-4" />
+                  Close Form
+                </>
+              ) : (
+                <>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  New Item
+                </>
+              )}
+            </Button>
+          </div>
+          <AnimatePresence initial={false}>
+            {showCreateItemForm && (
+              <ItemForm
+                onSubmit={handleCreateItemSubmit}
+                onCancel={() => setShowCreateItemForm(false)}
+                loading={createItemLoading}
+              />
+            )}
+          </AnimatePresence>
+        </motion.section>
+      )}
 
       <AnimatePresence>
         {showForm && (
@@ -333,16 +397,20 @@ export default function ItemDetailsPage() {
 
       <StatisticsCards cards={statisticsCards} />
 
-      <DataTable
-        data={filteredItemDetails}
-        columns={columns}
-        title="Item Details"
-        subtitle={`${filteredItemDetails.length} item${
-          filteredItemDetails.length !== 1 ? "s" : ""
-        } tracked`}
-        emptyMessage="No item details found for this room. Add your first item detail to get started."
-        emptyIcon={<Package className="h-12 w-12 text-gray-300" />}
-      />
+      <div className="overflow-hidden rounded-xl border border-border/40 bg-card/50 shadow-sm">
+        <div className="overflow-x-auto">
+          <DataTable
+            data={filteredItemDetails}
+            columns={columns}
+            title="Item Details"
+            subtitle={`${filteredItemDetails.length} item${
+              filteredItemDetails.length !== 1 ? "s" : ""
+            } tracked`}
+            emptyMessage="No item details found for this room. Add your first item detail to get started."
+            emptyIcon={<Package className="h-12 w-12 text-gray-300" />}
+          />
+        </div>
+      </div>
 
       {ConfirmationDialog}
     </motion.div>

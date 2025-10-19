@@ -19,12 +19,18 @@ const auditApi = baseApi.injectEndpoints({
         method: "POST",
         body: payload,
       }),
-      invalidatesTags: ["Audits"],
+      invalidatesTags: ["Audits", "History"],
     }),
 
     // Get all audits
     getAllAudits: builder.query<TResponse<TAudit[]>, void>({
       query: () => "/audits",
+      providesTags: ["Audits"],
+    }),
+
+    // Get latest audit
+    getLatestAudit: builder.query<TResponse<TAuditWithDetails>, void>({
+      query: () => "/audits/latest",
       providesTags: ["Audits"],
     }),
 
@@ -47,6 +53,7 @@ const auditApi = baseApi.injectEndpoints({
       invalidatesTags: (_result, _error, { id }) => [
         { type: "Audits", id },
         "Audits",
+        "History",
       ],
     }),
 
@@ -63,6 +70,7 @@ const auditApi = baseApi.injectEndpoints({
       invalidatesTags: (_result, _error, { audit_id }) => [
         { type: "Audits", id: audit_id },
         "Audits",
+        "History",
       ],
     }),
 
@@ -76,7 +84,7 @@ const auditApi = baseApi.injectEndpoints({
         method: "PATCH",
         body: payload,
       }),
-      invalidatesTags: ["Audits"],
+      invalidatesTags: ["Audits", "History"],
     }),
 
     // Delete item detail
@@ -85,7 +93,7 @@ const auditApi = baseApi.injectEndpoints({
         url: `/audits/items/${detail_id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Audits"],
+      invalidatesTags: ["Audits", "History"],
     }),
 
     // Delete audit
@@ -94,7 +102,7 @@ const auditApi = baseApi.injectEndpoints({
         url: `/audits/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Audits"],
+      invalidatesTags: ["Audits", "History"],
     }),
   }),
 });
@@ -103,6 +111,7 @@ export const {
   useCreateAuditMutation,
   useGetAllAuditsQuery,
   useGetAuditByIdQuery,
+  useGetLatestAuditQuery,
   useUpdateAuditMutation,
   useAddItemDetailToAuditMutation,
   useUpdateItemDetailMutation,

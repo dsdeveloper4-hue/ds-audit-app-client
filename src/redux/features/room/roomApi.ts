@@ -15,7 +15,7 @@ const roomApi = baseApi.injectEndpoints({
         method: "POST",
         body: payload,
       }),
-      invalidatesTags: ["Rooms"],
+      invalidatesTags: ["Rooms", "History"],
     }),
 
     // Get all rooms
@@ -43,6 +43,7 @@ const roomApi = baseApi.injectEndpoints({
       invalidatesTags: (_result, _error, { id }) => [
         { type: "Rooms", id },
         "Rooms",
+        "History",
       ],
     }),
 
@@ -52,7 +53,7 @@ const roomApi = baseApi.injectEndpoints({
         url: `/rooms/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Rooms",],
+      invalidatesTags: ["Rooms", "History"],
     }),
   }),
 });

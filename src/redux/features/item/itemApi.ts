@@ -15,7 +15,7 @@ const itemApi = baseApi.injectEndpoints({
         method: "POST",
         body: payload,
       }),
-      invalidatesTags: ["Items"],
+      invalidatesTags: ["Items", "History"],
     }),
 
     // Get all items
@@ -43,6 +43,7 @@ const itemApi = baseApi.injectEndpoints({
       invalidatesTags: (_result, _error, { id }) => [
         { type: "Items", id },
         "Items",
+        "History",
       ],
     }),
 
@@ -52,7 +53,7 @@ const itemApi = baseApi.injectEndpoints({
         url: `/items/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Items",],
+      invalidatesTags: ["Items", "History"],
     }),
   }),
 });

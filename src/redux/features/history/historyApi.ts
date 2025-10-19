@@ -8,12 +8,14 @@ const historyApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["History"],
     }),
     getActivityStats: builder.query({
       query: () => ({
         url: "/history/stats",
         method: "GET",
       }),
+      providesTags: ["History"],
     }),
   }),
 });
