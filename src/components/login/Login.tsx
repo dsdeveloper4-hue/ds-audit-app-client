@@ -74,7 +74,6 @@ export default function LoginPage() {
             <FormWrapper
               schema={loginSchema}
               onSubmit={handleLogin}
-              defaultValues={defaultValues}
               className="space-y-4"
             >
               {(control, handleSubmit) => (
