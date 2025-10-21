@@ -110,7 +110,7 @@ export default function ItemDetailsPage() {
       await createItem(data).unwrap();
       toast.success("Item created successfully!");
       setShowCreateItemForm(false);
-    } catch (error) {
+    } catch {
       toast.error("Failed to create item. Please try again.");
     }
   };

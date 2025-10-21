@@ -204,8 +204,32 @@ const DashboardPage = () => {
       !selectedAuditResponse?.data
     : false;
 
-  if (combinedError) return <Error />;
+  // Check if error is specifically "no audits found" (404 from getLatestAudit)
+  const extractStatus = (error: unknown): number | undefined => {
+    if (typeof error === "object" && error !== null && "status" in error) {
+      return (error as { status?: number }).status;
+    }
+    return undefined;
+  };
+
+  const isNoAuditsError = (error: unknown) => extractStatus(error) === 404;
+
+  const isNoAuditsFound = isNoAuditsError(latestError) && !auditsError && !selectedAuditError;
+
+  if (combinedError && !isNoAuditsFound) return <Error />;
   if (isInitialLoading || isSwitchingAudit) return <ListPageSkeleton />;
+
+  if (isNoAuditsFound) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500 mb-4">No audits found</p>
+          <p className="text-sm text-gray-400">Create your first audit to get started</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!audit) {
     return (
@@ -256,9 +280,11 @@ const DashboardPage = () => {
               <DropdownMenuItem
                 key={option.id}
                 onSelect={() =>
-                  setSelectedAuditId((current) =>
-                    option.id === latestAuditResponse?.data?.id ? null : option.id
-                  )
+                  setSelectedAuditId((current) => {
+                    // If currently selected audit is the latest one, deselect it
+                    // Otherwise, select the clicked audit
+                    return current === latestAuditResponse?.data?.id ? null : option.id;
+                  })
                 }
                 className={isCurrent ? "font-semibold" : undefined}
               >

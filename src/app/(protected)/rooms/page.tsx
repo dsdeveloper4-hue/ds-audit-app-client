@@ -11,6 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Plus, X, Loader2, DoorOpen } from "lucide-react";
 import { ListPageSkeleton } from "@/components/shared/Skeletons";
 import Error from "@/components/shared/Error";
@@ -19,7 +26,6 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRole } from "@/hooks/useRole";
 import { RoomList } from "@/components/shared/AllRooms";
-import { useConfirmationDialog } from "@/components/shared/ConfirmationDialog";
 
 export default function RoomsPage() {
   const { canManageUsers } = useRole();
@@ -36,7 +42,39 @@ export default function RoomsPage() {
     department: "",
   });
 
-  const { confirm, ConfirmationDialog } = useConfirmationDialog();
+  // Floor options
+  const floorOptions = [
+    { value: "1st Floor", label: "1st Floor" },
+    { value: "2nd Floor", label: "2nd Floor" },
+    { value: "3rd Floor", label: "3rd Floor" },
+    { value: "4th Floor", label: "4th Floor" },
+    { value: "5th Floor", label: "5th Floor" },
+    { value: "6th Floor", label: "6th Floor" },
+    { value: "7th Floor", label: "7th Floor" },
+    { value: "8th Floor", label: "8th Floor" },
+    { value: "9th Floor", label: "9th Floor" },
+    { value: "10th Floor", label: "10th Floor" },
+    { value: "custom", label: "Custom Floor" },
+  ];
+
+  // Department options
+  // Department options
+  const departmentOptions = [
+    { value: "IT", label: "IT" },
+    { value: "HR", label: "Human Resources" },
+    { value: "Marketing", label: "Marketing" },
+    { value: "Logistics", label: "Logistics" },
+    { value: "Courier", label: "Courier" },
+    { value: "Sales", label: "Sales" },
+    { value: "Operations", label: "Operations" },
+    { value: "Legal", label: "Legal" },
+    { value: "Admin", label: "Administration" },
+    { value: "Finance", label: "Finance" },
+    { value: "custom", label: "Custom Department" },
+  ];
+
+  const [customFloor, setCustomFloor] = useState("");
+  const [customDepartment, setCustomDepartment] = useState("");
 
   if (isLoading) return <ListPageSkeleton />;
   if (error) return <Error />;
@@ -51,28 +89,72 @@ export default function RoomsPage() {
     });
     setEditingRoom(null);
     setShowForm(false);
+    setCustomFloor("");
+    setCustomDepartment("");
   };
 
   const handleEdit = (room: TRoom) => {
     if (!canManageUsers) return;
     setEditingRoom(room);
-    setFormData({
-      name: room.name,
-      floor: room.floor || "",
-      department: room.department || "",
-    });
+
+    // Check if floor is in predefined options
+    const floorInOptions = floorOptions.find((opt) => opt.value === room.floor);
+    if (floorInOptions) {
+      setFormData({
+        name: room.name,
+        floor: room.floor,
+        department: "",
+      });
+      setCustomFloor("");
+    } else {
+      setFormData({
+        name: room.name,
+        floor: "custom",
+        department: "",
+      });
+      setCustomFloor(room.floor || "");
+    }
+
+    // Check if department is in predefined options
+    const deptInOptions = departmentOptions.find(
+      (opt) => opt.value === room.department
+    );
+    if (deptInOptions) {
+      setFormData((prev) => ({
+        ...prev,
+        department: room.department || "",
+      }));
+      setCustomDepartment("");
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        department: "custom",
+      }));
+      setCustomDepartment(room.department || "");
+    }
+
     setShowForm(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Prepare the final form data
+    const submitData = {
+      ...formData,
+      floor: formData.floor === "custom" ? customFloor : formData.floor,
+      department:
+        formData.department === "custom"
+          ? customDepartment
+          : formData.department,
+    };
+
     try {
       if (editingRoom) {
-        await updateRoom({ id: editingRoom.id, payload: formData }).unwrap();
+        await updateRoom({ id: editingRoom.id, payload: submitData }).unwrap();
         toast.success("Room updated successfully!");
       } else {
-        await createRoom(formData).unwrap();
+        await createRoom(submitData).unwrap();
         toast.success("Room created successfully!");
       }
       resetForm();
@@ -86,22 +168,15 @@ export default function RoomsPage() {
 
   const handleDelete = async (id: string) => {
     if (!canManageUsers) return;
-    const room = rooms.find(r => r.id === id);
-    await confirm({
-      title: "Delete Room",
-      description: `Are you sure you want to delete "${room?.name || 'this room'}"? This action cannot be undone.`,
-      onConfirm: async () => {
-        try {
-          await deleteRoom(id).unwrap();
-          toast.success("Room deleted successfully!");
-        } catch (err: any) {
-          console.error("Failed to delete room:", err);
-          toast.error(
-            err?.data?.message || "Failed to delete room. Please try again."
-          );
-        }
-      },
-    });
+    try {
+      await deleteRoom(id).unwrap();
+      toast.success("Room deleted successfully!");
+    } catch (err: any) {
+      console.error("Failed to delete room:", err);
+      toast.error(
+        err?.data?.message || "Failed to delete room. Please try again."
+      );
+    }
   };
 
   const containerVariants = {
@@ -187,28 +262,64 @@ export default function RoomsPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="floor">Floor</Label>
-                    <Input
-                      id="floor"
-                      value={formData.floor}
-                      onChange={(e) =>
-                        setFormData({ ...formData, floor: e.target.value })
-                      }
-                      placeholder="e.g., 1st Floor"
-                    />
+                    <div className="space-y-2">
+                      <Select
+                        value={formData.floor}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, floor: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select floor" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {floorOptions.map((floor) => (
+                            <SelectItem key={floor.value} value={floor.value}>
+                              {floor.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {formData.floor === "custom" && (
+                        <Input
+                          value={customFloor}
+                          onChange={(e) => setCustomFloor(e.target.value)}
+                          placeholder="Enter custom floor"
+                        />
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="department">Department</Label>
-                    <Input
-                      id="department"
-                      value={formData.department}
-                      onChange={(e) =>
-                        setFormData({ ...formData, department: e.target.value })
-                      }
-                      placeholder="e.g., IT Department"
-                    />
+                    <div className="space-y-2">
+                      <Select
+                        value={formData.department}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, department: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select department" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {departmentOptions.map((dept) => (
+                            <SelectItem key={dept.value} value={dept.value}>
+                              {dept.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {formData.department === "custom" && (
+                        <Input
+                          value={customDepartment}
+                          onChange={(e) => setCustomDepartment(e.target.value)}
+                          placeholder="Enter custom department"
+                        />
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -254,8 +365,6 @@ export default function RoomsPage() {
           canManageUsers={canManageUsers}
         />
       </motion.div>
-
-      {ConfirmationDialog}
     </motion.div>
   );
 }

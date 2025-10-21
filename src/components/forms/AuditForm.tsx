@@ -25,6 +25,9 @@ export function AuditForm({ isOpen, onClose, audit, onSuccess }: AuditFormProps)
   const [updateAudit, { isLoading: isUpdating }] = useUpdateAuditMutation();
   const { data: usersData, isLoading: isLoadingUsers } = useGetAllUsersQuery(undefined);
 
+  const isEditing = !!audit;
+  const isLoading = isCreating || isUpdating;
+
   const currentDate = new Date();
   const [formData, setFormData] = useState<TCreateAuditPayload>({
     month: audit?.month || currentDate.getMonth() + 1,
@@ -33,8 +36,9 @@ export function AuditForm({ isOpen, onClose, audit, onSuccess }: AuditFormProps)
     participant_ids: audit?.participants?.map(p => p.id) || [],
   });
 
-  const isLoading = isCreating || isUpdating;
-  const isEditing = !!audit;
+  const [status, setStatus] = useState<"IN_PROGRESS" | "COMPLETED" | "CANCELED">(
+    audit?.status || "IN_PROGRESS"
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +46,7 @@ export function AuditForm({ isOpen, onClose, audit, onSuccess }: AuditFormProps)
     try {
       if (isEditing) {
         const updatePayload: TUpdateAuditPayload = {
+          status: status,
           notes: formData.notes,
           participant_ids: formData.participant_ids,
         };
@@ -143,6 +148,27 @@ export function AuditForm({ isOpen, onClose, audit, onSuccess }: AuditFormProps)
           </Select>
         </div>
       </div>
+
+      {isEditing && (
+        <div className="space-y-2">
+          <Label htmlFor="status">Status</Label>
+          <Select
+            value={status}
+            onValueChange={(value: "IN_PROGRESS" | "COMPLETED" | "CANCELED") =>
+              setStatus(value)
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+              <SelectItem value="COMPLETED">Completed</SelectItem>
+              <SelectItem value="CANCELED">Canceled</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="notes">Notes</Label>

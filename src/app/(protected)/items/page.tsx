@@ -16,7 +16,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -34,14 +33,12 @@ import {
   Search,
   Grid3x3,
   List,
-  X,
-  Loader2,
   Box,
   Filter,
 } from "lucide-react";
 import { ListPageSkeleton } from "@/components/shared/Skeletons";
 import Error from "@/components/shared/Error";
-import { TItem, TCreateItemPayload } from "@/types";
+import { TItem } from "@/types";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRole } from "@/hooks/useRole";
@@ -60,15 +57,10 @@ export default function ItemsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
-  const [formData, setFormData] = useState<TCreateItemPayload>({
-    name: "",
-    category: "",
-    unit: "",
-  });
 
   const { confirm, ConfirmationDialog } = useConfirmationDialog();
 
-  const items = data?.data || [];
+  const items = useMemo(() => data?.data || [], [data]);
 
   // Get unique categories
   const categories = useMemo(() => {
@@ -104,11 +96,6 @@ export default function ItemsPage() {
   if (error) return <Error />;
 
   const resetForm = () => {
-    setFormData({
-      name: "",
-      category: "",
-      unit: "",
-    });
     setEditingItem(null);
     setShowForm(false);
   };
@@ -116,32 +103,7 @@ export default function ItemsPage() {
   const handleEdit = (item: TItem) => {
     if (!canManageUsers) return;
     setEditingItem(item);
-    setFormData({
-      name: item.name,
-      category: item.category || "",
-      unit: item.unit || "",
-    });
     setShowForm(true);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      if (editingItem) {
-        await updateItem({ id: editingItem.id, payload: formData }).unwrap();
-        toast.success("Item updated successfully!");
-      } else {
-        await createItem(formData).unwrap();
-        toast.success("Item created successfully!");
-      }
-      resetForm();
-    } catch (err: any) {
-      console.error("Failed to save item:", err);
-      toast.error(
-        err?.data?.message || "Failed to save item. Please try again."
-      );
-    }
   };
 
   const handleDelete = async (id: string) => {
