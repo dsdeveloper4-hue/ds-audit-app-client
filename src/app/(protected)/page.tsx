@@ -42,6 +42,7 @@ import {
   XCircle,
   ChevronDown,
   Loader2,
+  FileText,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import months from "@/constants/months";
@@ -284,7 +285,13 @@ const DashboardPage = () => {
 
   const auditSwitcher = (
     <>
-      <DownloadPDF audit={audit} className="mr-2">Download PDF </DownloadPDF>
+      <DownloadPDF
+        audit={audit}
+        className="bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-blue-200 hover:border-blue-300 text-blue-700 hover:text-blue-800 dark:from-blue-950 dark:to-indigo-950 dark:border-blue-800 dark:text-blue-300 dark:hover:text-blue-200 transition-all duration-200"
+      >
+        <FileText className="h-4 w-4 mr-2" />
+        Download PDF
+      </DownloadPDF>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -345,7 +352,6 @@ const DashboardPage = () => {
     </>
   );
 
-  console.log(audit);
 
   // Transform data for Item Breakdown (Area Chart)
   const itemBreakdownData =
