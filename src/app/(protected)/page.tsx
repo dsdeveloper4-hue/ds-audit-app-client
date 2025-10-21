@@ -44,6 +44,8 @@ import {
   Loader2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import months from "@/constants/months";
+import DownloadPDF from "@/components/shared/DownloadPDF";
 
 const COLORS = {
   active: "#059669", // Darker green, professional & modern
@@ -52,13 +54,11 @@ const COLORS = {
   total: "#1D4ED8", // Deep blue, professional highlight
 };
 
-
 const STATUS_SUMMARY_COLORS = [
   "#10B981", // Active light
   "#EF4444", // Broken light
   "#9CA3AF", // Inactive light
 ];
-
 
 const DashboardPage = () => {
   const {
@@ -71,7 +71,9 @@ const DashboardPage = () => {
     isLoading: isAuditsLoading,
     error: auditsError,
   } = useGetAllAuditsQuery();
-  const [selectedAuditId, setSelectedAuditId] = React.useState<string | null>(null);
+  const [selectedAuditId, setSelectedAuditId] = React.useState<string | null>(
+    null
+  );
   const {
     data: selectedAuditResponse,
     isFetching: isSelectedAuditFetching,
@@ -82,11 +84,17 @@ const DashboardPage = () => {
 
   const auditOptions = React.useMemo(
     () =>
-      (auditsResponse?.data ?? []).map((auditOption) => ({
-        id: auditOption.id,
-        label: `Audit ${auditOption.month}/${auditOption.year}`,
-        status: auditOption.status,
-      })),
+      (auditsResponse?.data ?? []).map((auditOption) => {
+        // find month name by matching value
+        const monthName =
+          months.find((m) => m.value === auditOption.month)?.label ?? "Unknown";
+
+        return {
+          id: auditOption.id,
+          label: `Audit ${monthName} ${auditOption.year}`,
+          status: auditOption.status,
+        };
+      }),
     [auditsResponse]
   );
 
@@ -132,8 +140,16 @@ const DashboardPage = () => {
     );
 
     const summaryData = [
-      { name: "Active", value: totalActiveCount, color: STATUS_SUMMARY_COLORS[0] },
-      { name: "Broken", value: totalBrokenCount, color: STATUS_SUMMARY_COLORS[1] },
+      {
+        name: "Active",
+        value: totalActiveCount,
+        color: STATUS_SUMMARY_COLORS[0],
+      },
+      {
+        name: "Broken",
+        value: totalBrokenCount,
+        color: STATUS_SUMMARY_COLORS[1],
+      },
       {
         name: "Inactive",
         value: totalInactiveCount,
@@ -141,7 +157,10 @@ const DashboardPage = () => {
       },
     ];
 
-    const totalItems = summaryData.reduce((sum, status) => sum + status.value, 0);
+    const totalItems = summaryData.reduce(
+      (sum, status) => sum + status.value,
+      0
+    );
 
     return {
       totalActive: totalActiveCount,
@@ -214,7 +233,8 @@ const DashboardPage = () => {
 
   const isNoAuditsError = (error: unknown) => extractStatus(error) === 404;
 
-  const isNoAuditsFound = isNoAuditsError(latestError) && !auditsError && !selectedAuditError;
+  const isNoAuditsFound =
+    isNoAuditsError(latestError) && !auditsError && !selectedAuditError;
 
   if (combinedError && !isNoAuditsFound) return <Error />;
   if (isInitialLoading || isSwitchingAudit) return <ListPageSkeleton />;
@@ -225,7 +245,9 @@ const DashboardPage = () => {
         <div className="text-center">
           <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-500 mb-4">No audits found</p>
-          <p className="text-sm text-gray-400">Create your first audit to get started</p>
+          <p className="text-sm text-gray-400">
+            Create your first audit to get started
+          </p>
         </div>
       </div>
     );
@@ -242,69 +264,88 @@ const DashboardPage = () => {
     );
   }
 
-  const selectedAuditOption = auditOptions.find((option) => option.id === selectedAuditId);
-  const dropdownLabel = selectedAuditOption?.label
-    ?? (latestAuditResponse?.data
-      ? `Audit ${latestAuditResponse.data.month}/${latestAuditResponse.data.year}`
-      : "Select audit");
-  const isAuditSelectorDisabled = auditOptions.length === 0;
-  const isAuditSwitcherBusy = isAuditsLoading || (selectedAuditId ? isSelectedAuditFetching : false);
-
-  const auditSwitcher = (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={isAuditSelectorDisabled || isInitialLoading}
-          className="justify-start"
-        >
-          {isAuditSwitcherBusy ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <LayoutDashboard className="h-4 w-4 text-primary" />
-          )}
-          <span className="text-sm font-medium">{dropdownLabel}</span>
-          <ChevronDown className="h-4 w-4 opacity-60" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-60">
-        <DropdownMenuLabel>Switch audit</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {auditOptions.length > 0 ? (
-          auditOptions.map((option) => {
-            const isCurrent = selectedAuditId
-              ? option.id === selectedAuditId
-              : option.id === latestAuditResponse?.data?.id;
-            return (
-              <DropdownMenuItem
-                key={option.id}
-                onSelect={() =>
-                  setSelectedAuditId((current) => {
-                    // If currently selected audit is the latest one, deselect it
-                    // Otherwise, select the clicked audit
-                    return current === latestAuditResponse?.data?.id ? null : option.id;
-                  })
-                }
-                className={isCurrent ? "font-semibold" : undefined}
-              >
-                <div className="flex w-full items-center justify-between">
-                  <span>{option.label}</span>
-                  <Badge variant={option.status === "COMPLETED" ? "default" : "secondary"}>
-                    {option.status.replace("_", " ")}
-                  </Badge>
-                </div>
-              </DropdownMenuItem>
-            );
-          })
-        ) : (
-          <DropdownMenuItem disabled>No audits available</DropdownMenuItem>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+  const selectedAuditOption = auditOptions.find(
+    (option) => option.id === selectedAuditId
   );
 
-  // Transform data for Room-Item Count Chart (Bar Chart)
+  const dropdownLabel =
+    selectedAuditOption?.label ??
+    (latestAuditResponse?.data
+      ? (() => {
+          const monthName =
+            months.find((m) => m.value === latestAuditResponse.data.month)
+              ?.label ?? "Unknown";
+          return `Audit ${monthName} ${latestAuditResponse.data.year}`;
+        })()
+      : "Select audit");
+  const isAuditSelectorDisabled = auditOptions.length === 0;
+  const isAuditSwitcherBusy =
+    isAuditsLoading || (selectedAuditId ? isSelectedAuditFetching : false);
+
+  const auditSwitcher = (
+    <>
+      <DownloadPDF audit={audit} className="mr-2">Download PDF </DownloadPDF>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isAuditSelectorDisabled || isInitialLoading}
+            className="justify-start"
+          >
+            {isAuditSwitcherBusy ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <LayoutDashboard className="h-4 w-4 text-primary" />
+            )}
+            <span className="text-sm font-medium">{dropdownLabel}</span>
+            <ChevronDown className="h-4 w-4 opacity-60" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-60">
+          <DropdownMenuLabel>Switch audit</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {auditOptions.length > 0 ? (
+            auditOptions.map((option) => {
+              const isCurrent = selectedAuditId
+                ? option.id === selectedAuditId
+                : option.id === latestAuditResponse?.data?.id;
+              return (
+                <DropdownMenuItem
+                  key={option.id}
+                  onSelect={() =>
+                    setSelectedAuditId((current) => {
+                      // If currently selected audit is the latest one, deselect it
+                      // Otherwise, select the clicked audit
+                      return current === latestAuditResponse?.data?.id
+                        ? null
+                        : option.id;
+                    })
+                  }
+                  className={isCurrent ? "font-semibold" : undefined}
+                >
+                  <div className="flex w-full items-center justify-between">
+                    <span>{option.label}</span>
+                    <Badge
+                      variant={
+                        option.status === "COMPLETED" ? "default" : "secondary"
+                      }
+                    >
+                      {option.status.replace("_", " ")}
+                    </Badge>
+                  </div>
+                </DropdownMenuItem>
+              );
+            })
+          ) : (
+            <DropdownMenuItem disabled>No audits available</DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
+  );
+
+  console.log(audit);
 
   // Transform data for Item Breakdown (Area Chart)
   const itemBreakdownData =
@@ -344,7 +385,13 @@ const DashboardPage = () => {
         description={
           <div className="flex items-center gap-2 mt-2">
             <span className="text-sm">
-              Latest Audit: {audit.month}/{audit.year}
+              Latest Audit:{" "}
+              {(() => {
+                const monthName =
+                  months.find((m) => m.value === audit.month)?.label ??
+                  "Unknown";
+                return `${monthName} ${audit.year}`;
+              })()}
             </span>
             <Badge
               variant={audit.status === "COMPLETED" ? "default" : "secondary"}
@@ -441,7 +488,11 @@ const DashboardPage = () => {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="itemCount" fill={COLORS.total} name="Item Count" />
+                  <Bar
+                    dataKey="itemCount"
+                    fill={COLORS.total}
+                    name="Item Count"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -473,7 +524,10 @@ const DashboardPage = () => {
                       {totalStatusItems}
                     </span>
                   </div>
-                  <figcaption id="item-status-summary-description" className="sr-only">
+                  <figcaption
+                    id="item-status-summary-description"
+                    className="sr-only"
+                  >
                     {statusSummaryData
                       .map((status) => `${status.name}: ${status.value}`)
                       .join(", ")}
@@ -489,8 +543,8 @@ const DashboardPage = () => {
                     Item Status Summary
                   </h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Track how assets are distributed across status states and their share of the
-                    total inventory.
+                    Track how assets are distributed across status states and
+                    their share of the total inventory.
                   </p>
                 </div>
                 <div className="space-y-3">
@@ -507,7 +561,9 @@ const DashboardPage = () => {
                         <div className="flex items-center gap-3">
                           <span
                             className="h-3 w-3 rounded-full"
-                            style={{ backgroundColor: STATUS_SUMMARY_COLORS[index] }}
+                            style={{
+                              backgroundColor: STATUS_SUMMARY_COLORS[index],
+                            }}
                             aria-hidden="true"
                           />
                           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">

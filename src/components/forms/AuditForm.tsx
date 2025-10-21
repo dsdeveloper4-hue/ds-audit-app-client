@@ -1,17 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import { useCreateAuditMutation, useUpdateAuditMutation } from "@/redux/features/audit/auditApi";
+import {
+  useCreateAuditMutation,
+  useUpdateAuditMutation,
+} from "@/redux/features/audit/auditApi";
 import { useGetAllUsersQuery } from "@/redux/features/user/userApi";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Users } from "lucide-react";
 import { FormWrapper } from "@/components/shared/FormWrapper";
 import { TAudit, TCreateAuditPayload, TUpdateAuditPayload } from "@/types";
 import { toast } from "sonner";
+import months from "@/constants/months";
 
 interface AuditFormProps {
   isOpen: boolean;
@@ -20,10 +34,16 @@ interface AuditFormProps {
   onSuccess?: () => void;
 }
 
-export function AuditForm({ isOpen, onClose, audit, onSuccess }: AuditFormProps) {
+export function AuditForm({
+  isOpen,
+  onClose,
+  audit,
+  onSuccess,
+}: AuditFormProps) {
   const [createAudit, { isLoading: isCreating }] = useCreateAuditMutation();
   const [updateAudit, { isLoading: isUpdating }] = useUpdateAuditMutation();
-  const { data: usersData, isLoading: isLoadingUsers } = useGetAllUsersQuery(undefined);
+  const { data: usersData, isLoading: isLoadingUsers } =
+    useGetAllUsersQuery(undefined);
 
   const isEditing = !!audit;
   const isLoading = isCreating || isUpdating;
@@ -33,12 +53,12 @@ export function AuditForm({ isOpen, onClose, audit, onSuccess }: AuditFormProps)
     month: audit?.month || currentDate.getMonth() + 1,
     year: audit?.year || currentDate.getFullYear(),
     notes: audit?.notes || "",
-    participant_ids: audit?.participants?.map(p => p.id) || [],
+    participant_ids: audit?.participants?.map((p) => p.id) || [],
   });
 
-  const [status, setStatus] = useState<"IN_PROGRESS" | "COMPLETED" | "CANCELED">(
-    audit?.status || "IN_PROGRESS"
-  );
+  const [status, setStatus] = useState<
+    "IN_PROGRESS" | "COMPLETED" | "CANCELED"
+  >(audit?.status || "IN_PROGRESS");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,9 +76,10 @@ export function AuditForm({ isOpen, onClose, audit, onSuccess }: AuditFormProps)
         // If no participants selected, use current user as participant
         const payload: TCreateAuditPayload = {
           ...formData,
-          participant_ids: formData.participant_ids && formData.participant_ids.length > 0
-            ? formData.participant_ids
-            : [], // Let backend handle default participant logic
+          participant_ids:
+            formData.participant_ids && formData.participant_ids.length > 0
+              ? formData.participant_ids
+              : [], // Let backend handle default participant logic
         };
         await createAudit(payload).unwrap();
         toast.success("Audit created successfully!");
@@ -69,25 +90,13 @@ export function AuditForm({ isOpen, onClose, audit, onSuccess }: AuditFormProps)
     } catch (error: any) {
       console.error("Failed to save audit:", error);
       toast.error(
-        error?.data?.message || `Failed to ${isEditing ? "update" : "create"} audit. Please try again.`
+        error?.data?.message ||
+          `Failed to ${
+            isEditing ? "update" : "create"
+          } audit. Please try again.`
       );
     }
   };
-
-  const months = [
-    { value: 1, label: "January" },
-    { value: 2, label: "February" },
-    { value: 3, label: "March" },
-    { value: 4, label: "April" },
-    { value: 5, label: "May" },
-    { value: 6, label: "June" },
-    { value: 7, label: "July" },
-    { value: 8, label: "August" },
-    { value: 9, label: "September" },
-    { value: 10, label: "October" },
-    { value: 11, label: "November" },
-    { value: 12, label: "December" },
-  ];
 
   const years = Array.from(
     { length: 10 },
@@ -175,9 +184,7 @@ export function AuditForm({ isOpen, onClose, audit, onSuccess }: AuditFormProps)
         <textarea
           id="notes"
           value={formData.notes}
-          onChange={(e) =>
-            setFormData({ ...formData, notes: e.target.value })
-          }
+          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
           placeholder="Add any notes about this audit..."
           rows={4}
           className="w-full px-3 py-2 border rounded-md bg-background text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
@@ -198,10 +205,12 @@ export function AuditForm({ isOpen, onClose, audit, onSuccess }: AuditFormProps)
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 <span>
-                  {formData.participant_ids && formData.participant_ids.length > 0
-                    ? `${formData.participant_ids.length} participant${formData.participant_ids.length > 1 ? 's' : ''} selected`
-                    : "Select participants"
-                  }
+                  {formData.participant_ids &&
+                  formData.participant_ids.length > 0
+                    ? `${formData.participant_ids.length} participant${
+                        formData.participant_ids.length > 1 ? "s" : ""
+                      } selected`
+                    : "Select participants"}
                 </span>
               </div>
               <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
@@ -211,23 +220,27 @@ export function AuditForm({ isOpen, onClose, audit, onSuccess }: AuditFormProps)
             <div className="p-4">
               <div className="space-y-3 max-h-60 overflow-y-auto">
                 {usersData?.data?.map((user) => {
-                  const isSelected = formData.participant_ids?.includes(user.id) || false;
+                  const isSelected =
+                    formData.participant_ids?.includes(user.id) || false;
                   return (
                     <div key={user.id} className="flex items-center space-x-2">
                       <Checkbox
                         id={`user-${user.id}`}
                         checked={isSelected}
                         onCheckedChange={(checked: boolean) => {
-                          const newParticipants = formData.participant_ids || [];
+                          const newParticipants =
+                            formData.participant_ids || [];
                           if (checked) {
                             setFormData({
                               ...formData,
-                              participant_ids: [...newParticipants, user.id]
+                              participant_ids: [...newParticipants, user.id],
                             });
                           } else {
                             setFormData({
                               ...formData,
-                              participant_ids: newParticipants.filter(id => id !== user.id)
+                              participant_ids: newParticipants.filter(
+                                (id) => id !== user.id
+                              ),
                             });
                           }
                         }}
@@ -238,7 +251,9 @@ export function AuditForm({ isOpen, onClose, audit, onSuccess }: AuditFormProps)
                       >
                         <div className="flex flex-col">
                           <span>{user.name}</span>
-                          <span className="text-xs text-muted-foreground">{user.mobile}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {user.mobile}
+                          </span>
                         </div>
                       </Label>
                     </div>
@@ -252,16 +267,22 @@ export function AuditForm({ isOpen, onClose, audit, onSuccess }: AuditFormProps)
         {formData.participant_ids && formData.participant_ids.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
             {formData.participant_ids.map((participantId) => {
-              const user = usersData?.data?.find(u => u.id === participantId);
+              const user = usersData?.data?.find((u) => u.id === participantId);
               return user ? (
-                <div key={participantId} className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-md text-sm">
+                <div
+                  key={participantId}
+                  className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-md text-sm"
+                >
                   {user.name}
                   <button
                     type="button"
                     onClick={() => {
                       setFormData({
                         ...formData,
-                        participant_ids: formData.participant_ids?.filter(id => id !== participantId) || []
+                        participant_ids:
+                          formData.participant_ids?.filter(
+                            (id) => id !== participantId
+                          ) || [],
                       });
                     }}
                     className="ml-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
@@ -274,9 +295,11 @@ export function AuditForm({ isOpen, onClose, audit, onSuccess }: AuditFormProps)
           </div>
         )}
 
-        {(!formData.participant_ids || formData.participant_ids.length === 0) && (
+        {(!formData.participant_ids ||
+          formData.participant_ids.length === 0) && (
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            No participants selected. The audit creator will be automatically assigned as a participant.
+            No participants selected. The audit creator will be automatically
+            assigned as a participant.
           </p>
         )}
       </div>
@@ -284,11 +307,10 @@ export function AuditForm({ isOpen, onClose, audit, onSuccess }: AuditFormProps)
       {!isEditing && (
         <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md p-4">
           <div className="flex gap-3">
-
             <p className="text-sm text-blue-800 dark:text-blue-200">
               <strong>Note:</strong> Creating an audit will automatically
-              generate item details for all existing rooms and items. You
-              can then add quantities during the audit process.
+              generate item details for all existing rooms and items. You can
+              then add quantities during the audit process.
             </p>
           </div>
         </div>

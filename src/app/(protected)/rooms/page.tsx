@@ -56,11 +56,9 @@ export default function RoomsPage() {
     { value: "10th Floor", label: "10th Floor" },
     { value: "custom", label: "Custom Floor" },
   ];
-
-  // Department options
-  // Department options
   const departmentOptions = [
     { value: "IT", label: "IT" },
+    { value: "R&D", label: "R&D" },
     { value: "HR", label: "Human Resources" },
     { value: "Marketing", label: "Marketing" },
     { value: "Logistics", label: "Logistics" },
@@ -72,7 +70,6 @@ export default function RoomsPage() {
     { value: "Finance", label: "Finance" },
     { value: "custom", label: "Custom Department" },
   ];
-
   const [customFloor, setCustomFloor] = useState("");
   const [customDepartment, setCustomDepartment] = useState("");
 
