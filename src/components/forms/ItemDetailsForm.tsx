@@ -198,8 +198,9 @@ export function ItemDetailsForm({
         toast.success("Item detail created successfully!");
       }
 
-      onSuccess?.();
-      onClose();
+      // onSuccess?.();
+      // onClose();
+
     } catch (error: any) {
       console.error("Failed to save item detail:", error);
       toast.error(
@@ -370,7 +371,7 @@ export function ItemDetailsForm({
       )}
 
       {/* Debug Section */}
-      {!isLoading && !isLoadingItems && !itemsError && itemsData && (
+      {/* {!isLoading && !isLoadingItems && !itemsError && itemsData && (
         <div className="bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-md p-4 mt-4">
           <p className="text-sm text-gray-800 dark:text-gray-200">
             <strong>Debug:</strong> {items.length} total items,{" "}
@@ -387,7 +388,7 @@ export function ItemDetailsForm({
             )}
           </p>
         </div>
-      )}
+      )} */}
     </FormWrapper>
   );
 }
