@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, FormEvent } from "react";
+import { useState, useMemo, FormEvent, useEffect } from "react";
 import { useGetAllItemsQuery } from "@/redux/features/item/itemApi";
 import {
   useCreateItemDetailDirectMutation,
@@ -99,6 +99,33 @@ export function ItemDetailsForm({
     broken_quantity: itemDetail?.broken_quantity || 0,
     inactive_quantity: itemDetail?.inactive_quantity || 0,
   });
+
+  // Sync form data with itemDetail prop changes
+  useEffect(() => {
+    if (itemDetail) {
+      setFormData({
+        room_id: roomId,
+        item_id: itemDetail.item_id,
+        active_quantity: itemDetail.active_quantity,
+        broken_quantity: itemDetail.broken_quantity,
+        inactive_quantity: itemDetail.inactive_quantity,
+      });
+      // Close popover when editing
+      setOpen(false);
+      setSearchValue("");
+    } else {
+      // Reset form when switching to create mode
+      setFormData({
+        room_id: roomId,
+        item_id: "",
+        active_quantity: 0,
+        broken_quantity: 0,
+        inactive_quantity: 0,
+      });
+      setOpen(false);
+      setSearchValue("");
+    }
+  }, [itemDetail, roomId]);
 
   const items = itemsData?.data || [];
   const isLoading = isCreating || isUpdating || isLoadingItems;
