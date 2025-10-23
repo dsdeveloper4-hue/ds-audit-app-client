@@ -156,14 +156,7 @@ export function ItemDetailsForm({
       );
     });
 
-    // Debug logging
-    console.log('🔍 Search Debug:', {
-      searchValue,
-      availableItemsCount: availableItems.length,
-      filteredItemsCount: result.length,
-      term: searchValue.trim().toLowerCase(),
-      sampleItems: result.slice(0, 3).map(item => ({ name: item.name, category: item.category }))
-    });
+
 
     return result;
   }, [availableItems, searchValue]);
@@ -184,11 +177,13 @@ export function ItemDetailsForm({
 
     try {
       if (isEditing) {
+
         const updatePayload: TUpdateItemDetailPayload = {
           active_quantity: formData.active_quantity,
           broken_quantity: formData.broken_quantity,
           inactive_quantity: formData.inactive_quantity,
         };
+
         await updateItemDetail({
           id: itemDetail!.id,
           payload: updatePayload,
