@@ -79,7 +79,6 @@ export function ItemDetailsForm({
   auditId,
   roomId,
   existingItemIds = [],
-  onSuccess,
 }: ItemDetailsFormProps) {
   const { data: itemsData, isLoading: isLoadingItems, error: itemsError } = useGetAllItemsQuery();
   const [createItemDetail, { isLoading: isCreating }] =
