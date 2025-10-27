@@ -104,6 +104,27 @@ const auditApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Audits", "History"],
     }),
+
+    // Get item summary by audit ID
+    getItemSummaryByAuditId: builder.query<
+      TResponse<{
+        audit: { id: string; month: number; year: number; status: string };
+        summary: Array<{
+          item_id: string;
+          item_name: string;
+          category: string | null;
+          unit: string | null;
+          active: number;
+          inactive: number;
+          damage: number;
+          total: number;
+        }>;
+      }>,
+      string
+    >({
+      query: (id) => `/audits/${id}/summary`,
+      providesTags: (_result, _error, id) => [{ type: "Audits", id }],
+    }),
   }),
 });
 
@@ -117,4 +138,5 @@ export const {
   useUpdateItemDetailMutation,
   useDeleteItemDetailMutation,
   useDeleteAuditMutation,
+  useGetItemSummaryByAuditIdQuery,
 } = auditApi;
