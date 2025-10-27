@@ -6,6 +6,7 @@ import {
   useGetAllAuditsQuery,
   useGetAuditByIdQuery,
   useGetLatestAuditQuery,
+  useGetItemSummaryByAuditIdQuery,
 } from "@/redux/features/audit/auditApi";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { ListPageSkeleton } from "@/components/shared/Skeletons";
@@ -43,8 +44,21 @@ import {
   ChevronDown,
   Loader2,
   FileText,
+  BarChart3,
+  Table as TableIcon,
+  Download,
 } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import months from "@/constants/months";
 import DownloadPDF from "@/components/shared/DownloadPDF";
 
@@ -75,6 +89,7 @@ const DashboardPage = () => {
   const [selectedAuditId, setSelectedAuditId] = React.useState<string | null>(
     null
   );
+  const [viewMode, setViewMode] = React.useState<"table" | "graph">("table");
   const {
     data: selectedAuditResponse,
     isFetching: isSelectedAuditFetching,
@@ -108,6 +123,20 @@ const DashboardPage = () => {
     }
     return latestAuditResponse?.data ?? null;
   }, [selectedAuditId, selectedAuditResponse, latestAuditResponse]);
+
+  // Determine current audit ID in a stable way
+  const currentAuditId = React.useMemo(() => {
+    return audit?.id ?? "";
+  }, [audit?.id]);
+
+  // Fetch item summary for the current audit
+  const {
+    data: itemSummaryResponse,
+    isLoading: isItemSummaryLoading,
+    error: itemSummaryError,
+  } = useGetItemSummaryByAuditIdQuery(currentAuditId, {
+    skip: !currentAuditId,
+  });
 
   const roomItemData = React.useMemo(
     () =>
@@ -215,6 +244,184 @@ const DashboardPage = () => {
     }),
     [totalStatusItems]
   );
+
+  // Transform data for Item Breakdown using aggregated summary
+  const itemBreakdownData = React.useMemo(() => {
+    console.log("🔍 Item Summary Response:", itemSummaryResponse);
+    console.log("🔍 Current Audit ID:", currentAuditId);
+    console.log("🔍 Is Loading:", isItemSummaryLoading);
+    console.log("🔍 Error:", itemSummaryError);
+
+    // If summary API fails or returns no data, fallback to aggregating from audit.itemDetails
+    if (
+      !itemSummaryResponse?.data?.summary ||
+      itemSummaryResponse.data.summary.length === 0
+    ) {
+      console.log("⚠️ No summary data from API, using fallback aggregation");
+
+      if (!audit?.itemDetails || audit.itemDetails.length === 0) {
+        console.log("⚠️ No item details available in audit");
+        return [];
+      }
+
+      // Aggregate item details manually
+      const itemMap = new Map<string, any>();
+
+      audit.itemDetails.forEach((detail: any) => {
+        const itemName = detail.item?.name || "Unknown";
+
+        if (!itemMap.has(itemName)) {
+          itemMap.set(itemName, {
+            item: itemName,
+            active: 0,
+            broken: 0,
+            inactive: 0,
+            total: 0,
+          });
+        }
+
+        const item = itemMap.get(itemName);
+        item.active += detail.active_quantity || 0;
+        item.broken += detail.broken_quantity || 0;
+        item.inactive += detail.inactive_quantity || 0;
+        item.total +=
+          (detail.active_quantity || 0) +
+          (detail.broken_quantity || 0) +
+          (detail.inactive_quantity || 0);
+      });
+
+      const fallbackData = Array.from(itemMap.values()).sort((a, b) =>
+        a.item.localeCompare(b.item)
+      );
+
+      console.log("✅ Fallback Data:", fallbackData);
+      return fallbackData;
+    }
+
+    const transformedData = itemSummaryResponse.data.summary.map((item) => ({
+      item: item.item_name,
+      active: item.active,
+      broken: item.damage,
+      inactive: item.inactive,
+      total: item.total,
+    }));
+
+    console.log("✅ Transformed Data from API:", transformedData);
+    return transformedData;
+  }, [
+    itemSummaryResponse,
+    currentAuditId,
+    isItemSummaryLoading,
+    itemSummaryError,
+    audit?.itemDetails,
+  ]);
+
+  // PDF Download Function
+  const downloadItemBreakdownPDF = React.useCallback(() => {
+    if (!itemBreakdownData || itemBreakdownData.length === 0) {
+      alert("No data available to download");
+      return;
+    }
+
+    const doc = new jsPDF({
+      orientation: "landscape",
+      unit: "mm",
+      format: "a4",
+    });
+
+    // Add title
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("Item Breakdown by Status — Summary Report", 148, 20, {
+      align: "center",
+    });
+
+    // Add date
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    const currentDate = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    doc.text(`Generated on: ${currentDate}`, 148, 28, { align: "center" });
+
+    // Add audit info
+    if (audit) {
+      const monthName =
+        months.find((m) => m.value === audit.month)?.label ?? "Unknown";
+      doc.text(
+        `Audit Period: ${monthName} ${audit.year} | Status: ${audit.status}`,
+        148,
+        35,
+        { align: "center" }
+      );
+    }
+
+    // Prepare table data
+    const tableData = itemBreakdownData.map((item) => [
+      item.item,
+      item.active.toString(),
+      item.inactive.toString(),
+      item.broken.toString(),
+      item.total.toString(),
+    ]);
+
+    // Add table
+    autoTable(doc, {
+      startY: 45,
+      head: [["Item Name", "Active", "Inactive", "Damage", "Total"]],
+      body: tableData,
+      theme: "grid",
+      headStyles: {
+        fillColor: [59, 130, 246], // Blue
+        textColor: 255,
+        fontStyle: "bold",
+        halign: "center",
+      },
+      bodyStyles: {
+        halign: "center",
+      },
+      columnStyles: {
+        0: { halign: "left", cellWidth: 80 }, // Item Name
+        1: { halign: "center", cellWidth: 40 }, // Active
+        2: { halign: "center", cellWidth: 40 }, // Inactive
+        3: { halign: "center", cellWidth: 40 }, // Damage
+        4: { halign: "center", cellWidth: 40 }, // Total
+      },
+      alternateRowStyles: {
+        fillColor: [245, 247, 250],
+      },
+      didParseCell: (data) => {
+        // Highlight rows with damage > 0
+        if (data.section === "body" && data.column.index === 3) {
+          const damageValue = parseInt(data.cell.text[0]);
+          if (damageValue > 0) {
+            data.row.cells[3].styles.fillColor = [254, 226, 226]; // Light red
+            data.row.cells[3].styles.textColor = [185, 28, 28]; // Dark red
+            data.row.cells[3].styles.fontStyle = "bold";
+          }
+        }
+      },
+    });
+
+    // Add footer
+    const pageCount = doc.getNumberOfPages();
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.text(
+        `Page ${i} of ${pageCount}`,
+        148,
+        doc.internal.pageSize.height - 10,
+        { align: "center" }
+      );
+    }
+
+    // Save the PDF
+    doc.save("item_breakdown_summary.pdf");
+  }, [itemBreakdownData, audit]);
 
   const combinedError = latestError || auditsError || selectedAuditError;
   const isInitialLoading = isLatestLoading || isAuditsLoading;
@@ -351,20 +558,6 @@ const DashboardPage = () => {
       </DropdownMenu>
     </>
   );
-
-
-  // Transform data for Item Breakdown (Area Chart)
-  const itemBreakdownData =
-    audit.itemDetails?.map((detail: any) => ({
-      item: detail.item?.name || "Unknown",
-      active: detail.active_quantity,
-      broken: detail.broken_quantity,
-      inactive: detail.inactive_quantity,
-      total:
-        detail.active_quantity +
-        detail.broken_quantity +
-        detail.inactive_quantity,
-    })) || [];
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -594,53 +787,218 @@ const DashboardPage = () => {
         </motion.div>
       </div>
 
-      {/* Item Breakdown Area Chart - Full Width */}
+      {/* Item Breakdown - Table/Graph View */}
       <motion.div variants={itemVariants}>
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-            Item Breakdown by Status
-          </h3>
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={itemBreakdownData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="item"
-                angle={-45}
-                textAnchor="end"
-                height={100}
-                style={{ fontSize: "11px" }}
-              />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line
-                type="natural"
-                dataKey="active"
-                stroke={COLORS.active}
-                strokeWidth={3}
-                dot={{ r: 4 }}
-                name="Active Trend"
-              />
-              <Line
-                type="natural"
-                dataKey="broken"
-                stroke={COLORS.broken}
-                strokeWidth={3}
-                dot={{ r: 4 }}
-                name="Broken Trend"
-              />
-              <Line
-                type="natural"
-                dataKey="inactive"
-                stroke={COLORS.inactive}
-                strokeWidth={3}
-                dot={{ r: 4 }}
-                name="Inactive Trend"
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Item Breakdown by Status
+            </h3>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={downloadItemBreakdownPDF}
+                className="gap-2 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 border-green-200 hover:border-green-300 text-green-700 hover:text-green-800 dark:from-green-950 dark:to-emerald-950 dark:border-green-800 dark:text-green-300 dark:hover:text-green-200"
+                disabled={!itemBreakdownData || itemBreakdownData.length === 0}
+              >
+                <Download className="h-4 w-4" />
+                Download PDF
+              </Button>
+              <Button
+                size="sm"
+                variant={viewMode === "table" ? "default" : "outline"}
+                onClick={() => setViewMode("table")}
+                className="gap-2"
+              >
+                <TableIcon className="h-4 w-4" />
+                Table
+              </Button>
+              <Button
+                size="sm"
+                variant={viewMode === "graph" ? "default" : "outline"}
+                onClick={() => setViewMode("graph")}
+                className="gap-2"
+              >
+                <BarChart3 className="h-4 w-4" />
+                Graph
+              </Button>
+            </div>
+          </div>
+
+          {viewMode === "table" ? (
+            <div className="rounded-md border">
+              {isItemSummaryLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <span className="ml-3 text-gray-600 dark:text-gray-400">
+                    Loading item breakdown...
+                  </span>
+                </div>
+              ) : itemSummaryError && itemBreakdownData.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <AlertCircle className="h-12 w-12 text-red-500 mb-3" />
+                  <p className="text-red-600 dark:text-red-400 font-medium">
+                    Error loading item breakdown from API
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {itemSummaryError &&
+                    typeof itemSummaryError === "object" &&
+                    "status" in itemSummaryError
+                      ? `Error ${itemSummaryError.status}: ${
+                          "data" in itemSummaryError &&
+                          itemSummaryError.data &&
+                          typeof itemSummaryError.data === "object" &&
+                          "message" in itemSummaryError.data
+                            ? String(itemSummaryError.data.message)
+                            : "Failed to fetch data"
+                        }`
+                      : "Failed to fetch data"}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-2">
+                    Using fallback data aggregation
+                  </p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="font-semibold">Item Name</TableHead>
+                      <TableHead className="text-center font-semibold">
+                        Active
+                      </TableHead>
+                      <TableHead className="text-center font-semibold">
+                        Inactive
+                      </TableHead>
+                      <TableHead className="text-center font-semibold">
+                        Broken
+                      </TableHead>
+                      <TableHead className="text-center font-semibold">
+                        Total
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {itemBreakdownData.length > 0 ? (
+                      itemBreakdownData.map((item, index) => (
+                        <TableRow
+                          key={index}
+                          className={
+                            item.broken > 0
+                              ? "bg-red-50/50 dark:bg-red-900/10 hover:bg-red-100/50 dark:hover:bg-red-900/20"
+                              : ""
+                          }
+                        >
+                          <TableCell className="font-medium">
+                            {item.item}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                              {item.active}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-300">
+                              {item.inactive}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span
+                              className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-medium ${
+                                item.broken > 0
+                                  ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 font-semibold"
+                                  : "bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-300"
+                              }`}
+                            >
+                              {item.broken}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                              {item.total}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan={5}
+                          className="text-center text-gray-500 py-8"
+                        >
+                          No item data available
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          ) : isItemSummaryLoading ? (
+            <div className="flex items-center justify-center h-[400px]">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-3 text-gray-600 dark:text-gray-400">
+                Loading chart data...
+              </span>
+            </div>
+          ) : itemSummaryError && itemBreakdownData.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-[400px]">
+              <AlertCircle className="h-12 w-12 text-red-500 mb-3" />
+              <p className="text-red-600 dark:text-red-400 font-medium">
+                Error loading chart data from API
+              </p>
+              <p className="text-xs text-gray-400 mt-2">
+                Using fallback data aggregation
+              </p>
+            </div>
+          ) : itemBreakdownData.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-[400px]">
+              <Package className="h-12 w-12 text-gray-300 mb-3" />
+              <p className="text-gray-500">No data available for chart</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={400}>
+              <LineChart data={itemBreakdownData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="item"
+                  angle={-45}
+                  textAnchor="end"
+                  height={100}
+                  style={{ fontSize: "11px" }}
+                />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line
+                  type="natural"
+                  dataKey="active"
+                  stroke={COLORS.active}
+                  strokeWidth={3}
+                  dot={{ r: 4 }}
+                  name="Active Trend"
+                />
+                <Line
+                  type="natural"
+                  dataKey="broken"
+                  stroke={COLORS.broken}
+                  strokeWidth={3}
+                  dot={{ r: 4 }}
+                  name="Broken Trend"
+                />
+                <Line
+                  type="natural"
+                  dataKey="inactive"
+                  stroke={COLORS.inactive}
+                  strokeWidth={3}
+                  dot={{ r: 4 }}
+                  name="Inactive Trend"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </Card>
-      </motion.div>
+          </motion.div>
     </motion.div>
   );
 };
