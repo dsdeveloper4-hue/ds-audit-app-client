@@ -247,20 +247,14 @@ const DashboardPage = () => {
 
   // Transform data for Item Breakdown using aggregated summary
   const itemBreakdownData = React.useMemo(() => {
-    console.log("🔍 Item Summary Response:", itemSummaryResponse);
-    console.log("🔍 Current Audit ID:", currentAuditId);
-    console.log("🔍 Is Loading:", isItemSummaryLoading);
-    console.log("🔍 Error:", itemSummaryError);
 
     // If summary API fails or returns no data, fallback to aggregating from audit.itemDetails
     if (
       !itemSummaryResponse?.data?.summary ||
       itemSummaryResponse.data.summary.length === 0
     ) {
-      console.log("⚠️ No summary data from API, using fallback aggregation");
 
       if (!audit?.itemDetails || audit.itemDetails.length === 0) {
-        console.log("⚠️ No item details available in audit");
         return [];
       }
 
@@ -294,7 +288,6 @@ const DashboardPage = () => {
         a.item.localeCompare(b.item)
       );
 
-      console.log("✅ Fallback Data:", fallbackData);
       return fallbackData;
     }
 
@@ -306,7 +299,6 @@ const DashboardPage = () => {
       total: item.total,
     }));
 
-    console.log("✅ Transformed Data from API:", transformedData);
     return transformedData;
   }, [
     itemSummaryResponse,

@@ -13,10 +13,7 @@ import { useAppDispatch } from "@/redux/hook";
 import { setUser } from "@/redux/features/auth/authSlice";
 import { verifyToken } from "@/utils/verifyToken";
 import Image from "next/image";
-const defaultValues = {
-  mobile: "01617134236",
-  password: "sajukhan"
-}
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -74,7 +71,6 @@ export default function LoginPage() {
               schema={loginSchema}
               onSubmit={handleLogin}
               className="space-y-4"
-              defaultValues={defaultValues}
             >
               {(control, handleSubmit) => (
                 <>
