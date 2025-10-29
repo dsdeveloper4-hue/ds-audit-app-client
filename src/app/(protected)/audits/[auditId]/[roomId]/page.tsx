@@ -146,6 +146,14 @@ export default function ItemDetailsPage() {
           detail.inactive_quantity),
       0
     ),
+    totalValue: filteredItemDetails.reduce((sum, detail) => {
+      const unitPrice = detail.unit_price || detail.item?.unit_price || 0;
+      const totalQty =
+        detail.active_quantity +
+        detail.broken_quantity +
+        detail.inactive_quantity;
+      return sum + Number(unitPrice) * totalQty;
+    }, 0),
   };
 
   const statisticsCards = [
@@ -172,6 +180,12 @@ export default function ItemDetailsPage() {
       value: statistics.grandTotal,
       icon: <Package className="h-4 w-4" />,
       color: "blue" as const,
+    },
+    {
+      title: "Total Value",
+      value: `$${statistics.totalValue.toFixed(2)}`,
+      icon: <Package className="h-4 w-4" />,
+      color: "purple" as const,
     },
   ];
 
@@ -244,6 +258,36 @@ export default function ItemDetailsPage() {
           {getTotalQuantity(itemDetail)}
         </Badge>
       ),
+    },
+    {
+      key: "unit_price",
+      header: "Unit Price",
+      className: "text-center",
+      render: (itemDetail: TItemDetail) => {
+        const unitPrice =
+          itemDetail.unit_price || itemDetail.item?.unit_price || 0;
+        return (
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            ${Number(unitPrice).toFixed(2)}
+          </span>
+        );
+      },
+    },
+    {
+      key: "total_price",
+      header: "Total Value",
+      className: "text-center",
+      render: (itemDetail: TItemDetail) => {
+        const unitPrice =
+          itemDetail.unit_price || itemDetail.item?.unit_price || 0;
+        const totalQty = getTotalQuantity(itemDetail);
+        const totalPrice = Number(unitPrice) * totalQty;
+        return (
+          <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+            ${totalPrice.toFixed(2)}
+          </span>
+        );
+      },
     },
     {
       key: "actions",
@@ -346,7 +390,8 @@ export default function ItemDetailsPage() {
                 Create New Item
               </h2>
               <p className="text-sm text-muted-foreground">
-                Add a reusable item to keep your inventory organized across rooms.
+                Add a reusable item to keep your inventory organized across
+                rooms.
               </p>
             </div>
             <Button

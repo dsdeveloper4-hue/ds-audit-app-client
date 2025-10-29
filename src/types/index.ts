@@ -5,6 +5,7 @@ export * from "./item";
 export * from "./permission";
 export * from "./itemDetail";
 export * from "./activity";
+export * from "./assetPurchase";
 
 export interface TResponse<T> {
   success: boolean;

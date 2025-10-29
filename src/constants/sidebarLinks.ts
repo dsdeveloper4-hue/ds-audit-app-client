@@ -6,6 +6,7 @@ import {
   Package,
   DoorOpen,
   History,
+  ShoppingCart,
 } from "lucide-react";
 
 export const sidebarLinks = [
@@ -18,6 +19,11 @@ export const sidebarLinks = [
     title: "Audits",
     href: "/audits",
     icon: ClipboardCheck,
+  },
+  {
+    title: "Add Assets",
+    href: "/asset-purchases",
+    icon: ShoppingCart,
   },
   {
     title: "Rooms",

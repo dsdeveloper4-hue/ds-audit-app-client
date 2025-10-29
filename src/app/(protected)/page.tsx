@@ -269,6 +269,7 @@ const DashboardPage = () => {
 
       audit.itemDetails.forEach((detail: any) => {
         const itemName = detail.item?.name || "Unknown";
+        const unitPrice = detail.unit_price || detail.item?.unit_price || 0;
 
         if (!itemMap.has(itemName)) {
           itemMap.set(itemName, {
@@ -277,6 +278,8 @@ const DashboardPage = () => {
             broken: 0,
             inactive: 0,
             total: 0,
+            unit_price: unitPrice,
+            total_price: 0,
           });
         }
 
@@ -284,10 +287,12 @@ const DashboardPage = () => {
         item.active += detail.active_quantity || 0;
         item.broken += detail.broken_quantity || 0;
         item.inactive += detail.inactive_quantity || 0;
-        item.total +=
+        const qty =
           (detail.active_quantity || 0) +
           (detail.broken_quantity || 0) +
           (detail.inactive_quantity || 0);
+        item.total += qty;
+        item.total_price += qty * unitPrice;
       });
 
       const fallbackData = Array.from(itemMap.values()).sort((a, b) =>
@@ -304,6 +309,8 @@ const DashboardPage = () => {
       broken: item.damage,
       inactive: item.inactive,
       total: item.total,
+      unit_price: item.unit_price || 0,
+      total_price: item.total_price || 0,
     }));
 
     console.log("✅ Transformed Data from API:", transformedData);
@@ -365,12 +372,24 @@ const DashboardPage = () => {
       item.inactive.toString(),
       item.broken.toString(),
       item.total.toString(),
+      `$${(item.unit_price || 0).toFixed(2)}`,
+      `$${(item.total_price || 0).toFixed(2)}`,
     ]);
 
     // Add table
     autoTable(doc, {
       startY: 45,
-      head: [["Item Name", "Active", "Inactive", "Damage", "Total"]],
+      head: [
+        [
+          "Item Name",
+          "Active",
+          "Inactive",
+          "Damage",
+          "Total Qty",
+          "Unit Price",
+          "Total Value",
+        ],
+      ],
       body: tableData,
       theme: "grid",
       headStyles: {
@@ -383,11 +402,13 @@ const DashboardPage = () => {
         halign: "center",
       },
       columnStyles: {
-        0: { halign: "left", cellWidth: 80 }, // Item Name
-        1: { halign: "center", cellWidth: 40 }, // Active
-        2: { halign: "center", cellWidth: 40 }, // Inactive
-        3: { halign: "center", cellWidth: 40 }, // Damage
-        4: { halign: "center", cellWidth: 40 }, // Total
+        0: { halign: "left", cellWidth: 60 }, // Item Name
+        1: { halign: "center", cellWidth: 25 }, // Active
+        2: { halign: "center", cellWidth: 25 }, // Inactive
+        3: { halign: "center", cellWidth: 25 }, // Damage
+        4: { halign: "center", cellWidth: 25 }, // Total Qty
+        5: { halign: "center", cellWidth: 30 }, // Unit Price
+        6: { halign: "center", cellWidth: 35 }, // Total Value
       },
       alternateRowStyles: {
         fillColor: [245, 247, 250],
@@ -874,7 +895,13 @@ const DashboardPage = () => {
                         Broken
                       </TableHead>
                       <TableHead className="text-center font-semibold">
-                        Total
+                        Total Qty
+                      </TableHead>
+                      <TableHead className="text-center font-semibold">
+                        Unit Price
+                      </TableHead>
+                      <TableHead className="text-center font-semibold">
+                        Total Value
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -918,12 +945,22 @@ const DashboardPage = () => {
                               {item.total}
                             </span>
                           </TableCell>
+                          <TableCell className="text-center">
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              ${(item.unit_price || 0).toFixed(2)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                              ${(item.total_price || 0).toFixed(2)}
+                            </span>
+                          </TableCell>
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
                         <TableCell
-                          colSpan={5}
+                          colSpan={7}
                           className="text-center text-gray-500 py-8"
                         >
                           No item data available
@@ -998,7 +1035,7 @@ const DashboardPage = () => {
             </ResponsiveContainer>
           )}
         </Card>
-          </motion.div>
+      </motion.div>
     </motion.div>
   );
 };
