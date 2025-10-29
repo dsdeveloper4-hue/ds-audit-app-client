@@ -8,6 +8,8 @@ export interface TItemDetail {
   active_quantity: number;
   broken_quantity: number;
   inactive_quantity: number;
+  unit_price?: number;
+  total_price?: number;
   room?: {
     id: string;
     name: string;
@@ -19,6 +21,7 @@ export interface TItemDetail {
     name: string;
     category?: string;
     unit?: string;
+    unit_price?: number;
     description?: string;
   };
   created_at: string;
@@ -31,10 +34,12 @@ export interface TCreateItemDetailPayload {
   active_quantity?: number;
   broken_quantity?: number;
   inactive_quantity?: number;
+  unit_price?: number;
 }
 
 export interface TUpdateItemDetailPayload {
   active_quantity?: number;
   broken_quantity?: number;
   inactive_quantity?: number;
+  unit_price?: number;
 }

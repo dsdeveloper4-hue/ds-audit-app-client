@@ -118,6 +118,8 @@ const auditApi = baseApi.injectEndpoints({
           inactive: number;
           damage: number;
           total: number;
+          unit_price: number;
+          total_price: number;
         }>;
       }>,
       string
