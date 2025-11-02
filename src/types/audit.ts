@@ -7,6 +7,7 @@ export interface TAudit {
   year: number;
   status: "IN_PROGRESS" | "COMPLETED" | "CANCELED";
   notes?: string;
+  reduction_percentage?: number;
   participants?: TParticipant[];
   itemDetails?: TItemDetail[];
   detailsByRoom?: TDetailsByRoom[];

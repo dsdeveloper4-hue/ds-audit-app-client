@@ -66,7 +66,23 @@ export function AssetPurchaseForm({
 
   const [showNewItemInput, setShowNewItemInput] = useState(false);
   const [newItemName, setNewItemName] = useState("");
+  const [newItemCategory, setNewItemCategory] = useState("");
+  const [customCategory, setCustomCategory] = useState("");
   const [localItems, setLocalItems] = useState<TItem[]>(items);
+
+  // Category options - same as ItemForm plus "Review Unite"
+  const categoryOptions = [
+    { value: "Electronics", label: "Electronics" },
+    { value: "Furniture", label: "Furniture" },
+    { value: "Office Supplies", label: "Office Supplies" },
+    { value: "Books", label: "Books" },
+    { value: "Clothing", label: "Clothing" },
+    { value: "Tools", label: "Tools" },
+    { value: "Vehicles", label: "Vehicles" },
+    { value: "Equipment", label: "Equipment" },
+    { value: "Review Unite", label: "Review Unite" },
+    { value: "custom", label: "Custom Category" },
+  ];
 
   const {
     register,
@@ -125,12 +141,21 @@ export function AssetPurchaseForm({
     }
 
     try {
-      const result = await createItem({ name: newItemName.trim() }).unwrap();
+      // Determine the final category value
+      const finalCategory =
+        newItemCategory === "custom" ? customCategory.trim() : newItemCategory;
+
+      const result = await createItem({
+        name: newItemName.trim(),
+        category: finalCategory || undefined,
+      }).unwrap();
       const newItem = result.data;
 
       setLocalItems([...localItems, newItem]);
       setValue("item_id", newItem.id);
       setNewItemName("");
+      setNewItemCategory("");
+      setCustomCategory("");
       setShowNewItemInput(false);
       toast.success("Item added successfully!");
     } catch (error: any) {
@@ -163,6 +188,8 @@ export function AssetPurchaseForm({
     reset();
     setShowNewItemInput(false);
     setNewItemName("");
+    setNewItemCategory("");
+    setCustomCategory("");
   };
 
   return (
@@ -234,39 +261,88 @@ export function AssetPurchaseForm({
                 </Button>
               </div>
             ) : (
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Enter new item name"
-                  value={newItemName}
-                  onChange={(e) => setNewItemName(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleAddNewItem();
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  onClick={handleAddNewItem}
-                  disabled={isCreatingItem}
-                >
-                  {isCreatingItem ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    "Add"
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setShowNewItemInput(false);
-                    setNewItemName("");
-                  }}
-                >
-                  Cancel
-                </Button>
+              <div className="space-y-3 p-4 border rounded-lg bg-gray-50 dark:bg-gray-900">
+                <div className="space-y-2">
+                  <Label htmlFor="new_item_name">Item Name</Label>
+                  <Input
+                    id="new_item_name"
+                    placeholder="Enter new item name"
+                    value={newItemName}
+                    onChange={(e) => setNewItemName(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddNewItem();
+                      }
+                    }}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="new_item_category">Category (Optional)</Label>
+                  <Select
+                    value={newItemCategory}
+                    onValueChange={(value) => {
+                      setNewItemCategory(value);
+                      if (value !== "custom") {
+                        setCustomCategory("");
+                      }
+                    }}
+                  >
+                    <SelectTrigger id="new_item_category">
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categoryOptions.map((category) => (
+                        <SelectItem key={category.value} value={category.value}>
+                          {category.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {newItemCategory === "custom" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="custom_category">Custom Category</Label>
+                    <Input
+                      id="custom_category"
+                      placeholder="Enter custom category"
+                      value={customCategory}
+                      onChange={(e) => setCustomCategory(e.target.value)}
+                    />
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    onClick={handleAddNewItem}
+                    disabled={isCreatingItem}
+                    className="flex-1"
+                  >
+                    {isCreatingItem ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      "Add Item"
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowNewItemInput(false);
+                      setNewItemName("");
+                      setNewItemCategory("");
+                      setCustomCategory("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </div>
             )}
             {errors.item_id && (
@@ -319,11 +395,11 @@ export function AssetPurchaseForm({
                 Total Cost:
               </span>
               <span className="text-2xl font-bold text-green-600 dark:text-green-400">
-                ${totalCost.toFixed(2)}
+                ৳{totalCost.toFixed(2)}
               </span>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {quantity} × ${unitPrice.toFixed(2)}
+              {quantity} × ৳{unitPrice.toFixed(2)}
             </p>
           </div>
 
