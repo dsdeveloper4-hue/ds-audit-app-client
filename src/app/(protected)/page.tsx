@@ -364,9 +364,6 @@ const DashboardPage = () => {
     return transformedData;
   }, [
     itemSummaryResponse,
-    currentAuditId,
-    isItemSummaryLoading,
-    itemSummaryError,
     audit?.itemDetails,
   ]);
 
