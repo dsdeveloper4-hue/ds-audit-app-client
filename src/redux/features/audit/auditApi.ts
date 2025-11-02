@@ -127,6 +127,28 @@ const auditApi = baseApi.injectEndpoints({
       query: (id) => `/audits/${id}/summary`,
       providesTags: (_result, _error, id) => [{ type: "Audits", id }],
     }),
+
+    // Update adjustment percentage
+    updateAdjustment: builder.mutation<
+      TResponse<
+        TAuditWithDetails & {
+          total_asset_value: number;
+          adjusted_asset_value: number;
+          reduction_amount: number;
+        }
+      >,
+      { id: string; reduction_percentage: number }
+    >({
+      query: ({ id, reduction_percentage }) => ({
+        url: `/audits/${id}/adjustment`,
+        method: "PATCH",
+        body: { reduction_percentage },
+      }),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "Audits", id },
+        "Audits",
+      ],
+    }),
   }),
 });
 
@@ -141,4 +163,5 @@ export const {
   useDeleteItemDetailMutation,
   useDeleteAuditMutation,
   useGetItemSummaryByAuditIdQuery,
+  useUpdateAdjustmentMutation,
 } = auditApi;

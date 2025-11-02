@@ -6,7 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { X, Loader2 } from "lucide-react";
 import { TCreateItemPayload, TItem } from "@/types";
 
@@ -25,7 +31,7 @@ interface ItemFormProps {
  * Reusable Item Form Component
  * Handles both create and edit modes
  */
-export default function   ItemForm({
+export default function ItemForm({
   initialData = null,
   loading = false,
   onSubmit,
@@ -41,30 +47,37 @@ export default function   ItemForm({
   const [customUnit, setCustomUnit] = useState("");
 
   // Category options
-  const categoryOptions = useMemo(() => [
-    { value: "Electronics", label: "Electronics" },
-    { value: "Furniture", label: "Furniture" },
-    { value: "Office Supplies", label: "Office Supplies" },
-    { value: "Books", label: "Books" },
-    { value: "Clothing", label: "Clothing" },
-    { value: "Tools", label: "Tools" },
-    { value: "Vehicles", label: "Vehicles" },
-    { value: "Equipment", label: "Equipment" },
-    { value: "custom", label: "Custom Category" },
-  ], []);
+  const categoryOptions = useMemo(
+    () => [
+      { value: "Electronics", label: "Electronics" },
+      { value: "Furniture", label: "Furniture" },
+      { value: "Office Supplies", label: "Office Supplies" },
+      { value: "Books", label: "Books" },
+      { value: "Clothing", label: "Clothing" },
+      { value: "Tools", label: "Tools" },
+      { value: "Vehicles", label: "Vehicles" },
+      { value: "Equipment", label: "Equipment" },
+      { value: "Review Unite", label: "Review Unite" },
+      { value: "custom", label: "Custom Category" },
+    ],
+    []
+  );
 
   // Unit options
-  const unitOptions = useMemo(() => [
-    { value: "pieces", label: "Pieces" },
-    { value: "kg", label: "Kilograms (kg)" },
-    { value: "liters", label: "Liters" },
-    { value: "meters", label: "Meters" },
-    { value: "boxes", label: "Boxes" },
-    { value: "sets", label: "Sets" },
-    { value: "pairs", label: "Pairs" },
-    { value: "units", label: "Units" },
-    { value: "custom", label: "Custom Unit" },
-  ], []);
+  const unitOptions = useMemo(
+    () => [
+      { value: "pieces", label: "Pieces" },
+      { value: "kg", label: "Kilograms (kg)" },
+      { value: "liters", label: "Liters" },
+      { value: "meters", label: "Meters" },
+      { value: "boxes", label: "Boxes" },
+      { value: "sets", label: "Sets" },
+      { value: "pairs", label: "Pairs" },
+      { value: "units", label: "Units" },
+      { value: "custom", label: "Custom Unit" },
+    ],
+    []
+  );
 
   const isEditing = Boolean(initialData);
 
@@ -72,22 +85,31 @@ export default function   ItemForm({
   useEffect(() => {
     if (initialData) {
       // Check if category is in predefined options
-      const categoryInOptions = categoryOptions.find((opt: { value: string; label: string }) => opt.value === initialData.category);
+      const categoryInOptions = categoryOptions.find(
+        (opt: { value: string; label: string }) =>
+          opt.value === initialData.category
+      );
       if (categoryInOptions) {
-        setFormData(prev => ({ ...prev, category: initialData.category || "" }));
+        setFormData((prev) => ({
+          ...prev,
+          category: initialData.category || "",
+        }));
         setCustomCategory("");
       } else {
-        setFormData(prev => ({ ...prev, category: "custom" }));
+        setFormData((prev) => ({ ...prev, category: "custom" }));
         setCustomCategory(initialData.category || "");
       }
 
       // Check if unit is in predefined options
-      const unitInOptions = unitOptions.find((opt: { value: string; label: string }) => opt.value === initialData.unit);
+      const unitInOptions = unitOptions.find(
+        (opt: { value: string; label: string }) =>
+          opt.value === initialData.unit
+      );
       if (unitInOptions) {
-        setFormData(prev => ({ ...prev, unit: initialData.unit || "" }));
+        setFormData((prev) => ({ ...prev, unit: initialData.unit || "" }));
         setCustomUnit("");
       } else {
-        setFormData(prev => ({ ...prev, unit: "custom" }));
+        setFormData((prev) => ({ ...prev, unit: "custom" }));
         setCustomUnit(initialData.unit || "");
       }
     }
@@ -100,7 +122,8 @@ export default function   ItemForm({
     // Prepare the final form data
     const submitData = {
       ...formData,
-      category: formData.category === "custom" ? customCategory : formData.category,
+      category:
+        formData.category === "custom" ? customCategory : formData.category,
       unit: formData.unit === "custom" ? customUnit : formData.unit,
     };
 
@@ -147,17 +170,21 @@ export default function   ItemForm({
               <div className="space-y-2">
                 <Select
                   value={formData.category}
-                  onValueChange={(value) => setFormData({ ...formData, category: value })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, category: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categoryOptions.map((category: { value: string; label: string }) => (
-                      <SelectItem key={category.value} value={category.value}>
-                        {category.label}
-                      </SelectItem>
-                    ))}
+                    {categoryOptions.map(
+                      (category: { value: string; label: string }) => (
+                        <SelectItem key={category.value} value={category.value}>
+                          {category.label}
+                        </SelectItem>
+                      )
+                    )}
                   </SelectContent>
                 </Select>
                 {formData.category === "custom" && (
@@ -177,17 +204,21 @@ export default function   ItemForm({
               <div className="space-y-2">
                 <Select
                   value={formData.unit}
-                  onValueChange={(value) => setFormData({ ...formData, unit: value })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, unit: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select unit" />
                   </SelectTrigger>
                   <SelectContent>
-                    {unitOptions.map((unit: { value: string; label: string }) => (
-                      <SelectItem key={unit.value} value={unit.value}>
-                        {unit.label}
-                      </SelectItem>
-                    ))}
+                    {unitOptions.map(
+                      (unit: { value: string; label: string }) => (
+                        <SelectItem key={unit.value} value={unit.value}>
+                          {unit.label}
+                        </SelectItem>
+                      )
+                    )}
                   </SelectContent>
                 </Select>
                 {formData.unit === "custom" && (

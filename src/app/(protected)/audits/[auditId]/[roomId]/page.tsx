@@ -183,7 +183,7 @@ export default function ItemDetailsPage() {
     },
     {
       title: "Total Value",
-      value: `$${statistics.totalValue.toFixed(2)}`,
+      value: `৳${statistics.totalValue.toFixed(2)}`,
       icon: <Package className="h-4 w-4" />,
       color: "purple" as const,
     },
@@ -268,7 +268,7 @@ export default function ItemDetailsPage() {
           itemDetail.unit_price || itemDetail.item?.unit_price || 0;
         return (
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            ${Number(unitPrice).toFixed(2)}
+            ৳{Number(unitPrice).toFixed(2)}
           </span>
         );
       },
@@ -284,7 +284,7 @@ export default function ItemDetailsPage() {
         const totalPrice = Number(unitPrice) * totalQty;
         return (
           <span className="text-sm font-semibold text-green-600 dark:text-green-400">
-            ${totalPrice.toFixed(2)}
+            ৳{totalPrice.toFixed(2)}
           </span>
         );
       },

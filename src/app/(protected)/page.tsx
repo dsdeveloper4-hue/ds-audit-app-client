@@ -48,6 +48,7 @@ import {
   Table as TableIcon,
   Download,
 } from "lucide-react";
+import { AssetAdjustmentSection } from "@/components/dashboard/AssetAdjustmentSection";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Badge } from "@/components/ui/badge";
@@ -152,22 +153,74 @@ const DashboardPage = () => {
     totalBroken,
     totalInactive,
     totalStatusItems,
+    totalActiveValue,
+    totalBrokenValue,
+    totalInactiveValue,
+    totalValue,
     statusSummaryData,
   } = React.useMemo(() => {
     const itemDetails = audit?.itemDetails ?? [];
 
-    const totalActiveCount = itemDetails.reduce(
-      (sum: number, detail: any) => sum + detail.active_quantity,
-      0
-    );
-    const totalBrokenCount = itemDetails.reduce(
-      (sum: number, detail: any) => sum + detail.broken_quantity,
-      0
-    );
-    const totalInactiveCount = itemDetails.reduce(
-      (sum: number, detail: any) => sum + detail.inactive_quantity,
-      0
-    );
+    let totalActiveCount = 0;
+    let totalBrokenCount = 0;
+    let totalInactiveCount = 0;
+
+    // Group by item name and sum total prices
+    const itemGroups = new Map<
+      string,
+      {
+        totalPrice: number;
+        activeQty: number;
+        brokenQty: number;
+        inactiveQty: number;
+      }
+    >();
+
+    itemDetails.forEach((detail: any) => {
+      const itemName = detail.item?.name || "Unknown";
+      const activeQty = detail.active_quantity || 0;
+      const brokenQty = detail.broken_quantity || 0;
+      const inactiveQty = detail.inactive_quantity || 0;
+      const totalPrice = Number(detail.total_price) || 0;
+
+      totalActiveCount += activeQty;
+      totalBrokenCount += brokenQty;
+      totalInactiveCount += inactiveQty;
+
+      if (itemGroups.has(itemName)) {
+        const existing = itemGroups.get(itemName)!;
+        itemGroups.set(itemName, {
+          totalPrice: existing.totalPrice + totalPrice,
+          activeQty: existing.activeQty + activeQty,
+          brokenQty: existing.brokenQty + brokenQty,
+          inactiveQty: existing.inactiveQty + inactiveQty,
+        });
+      } else {
+        itemGroups.set(itemName, {
+          totalPrice,
+          activeQty,
+          brokenQty,
+          inactiveQty,
+        });
+      }
+    });
+
+    // Calculate values by distributing each item group's total price proportionally
+    let totalActiveVal = 0;
+    let totalBrokenVal = 0;
+    let totalInactiveVal = 0;
+
+    itemGroups.forEach((group) => {
+      const totalQty = group.activeQty + group.brokenQty + group.inactiveQty;
+
+      if (totalQty > 0) {
+        const pricePerUnit = group.totalPrice / totalQty;
+
+        totalActiveVal += group.activeQty * pricePerUnit;
+        totalBrokenVal += group.brokenQty * pricePerUnit;
+        totalInactiveVal += group.inactiveQty * pricePerUnit;
+      }
+    });
 
     const summaryData = [
       {
@@ -187,16 +240,18 @@ const DashboardPage = () => {
       },
     ];
 
-    const totalItems = summaryData.reduce(
-      (sum, status) => sum + status.value,
-      0
-    );
+    const totalItems = totalActiveCount + totalBrokenCount + totalInactiveCount;
+    const totalVal = totalActiveVal + totalBrokenVal + totalInactiveVal;
 
     return {
       totalActive: totalActiveCount,
       totalBroken: totalBrokenCount,
       totalInactive: totalInactiveCount,
       totalStatusItems: totalItems,
+      totalActiveValue: totalActiveVal,
+      totalBrokenValue: totalBrokenVal,
+      totalInactiveValue: totalInactiveVal,
+      totalValue: totalVal,
       statusSummaryData: summaryData,
     };
   }, [audit]);
@@ -246,24 +301,23 @@ const DashboardPage = () => {
   );
 
   // Transform data for Item Breakdown using aggregated summary
+  // Groups by item name and sums quantities and total prices
   const itemBreakdownData = React.useMemo(() => {
-
     // If summary API fails or returns no data, fallback to aggregating from audit.itemDetails
     if (
       !itemSummaryResponse?.data?.summary ||
       itemSummaryResponse.data.summary.length === 0
     ) {
-
       if (!audit?.itemDetails || audit.itemDetails.length === 0) {
         return [];
       }
 
-      // Aggregate item details manually
+      // Aggregate item details by name
       const itemMap = new Map<string, any>();
 
       audit.itemDetails.forEach((detail: any) => {
         const itemName = detail.item?.name || "Unknown";
-        const unitPrice = detail.unit_price || detail.item?.unit_price || 0;
+        const totalPrice = Number(detail.total_price) || 0;
 
         if (!itemMap.has(itemName)) {
           itemMap.set(itemName, {
@@ -272,7 +326,6 @@ const DashboardPage = () => {
             broken: 0,
             inactive: 0,
             total: 0,
-            unit_price: unitPrice,
             total_price: 0,
           });
         }
@@ -286,7 +339,8 @@ const DashboardPage = () => {
           (detail.broken_quantity || 0) +
           (detail.inactive_quantity || 0);
         item.total += qty;
-        item.total_price += qty * unitPrice;
+        // Sum the total_price from each entry (handles different prices per purchase)
+        item.total_price += totalPrice;
       });
 
       const fallbackData = Array.from(itemMap.values()).sort((a, b) =>
@@ -302,8 +356,7 @@ const DashboardPage = () => {
       broken: item.damage,
       inactive: item.inactive,
       total: item.total,
-      unit_price: item.unit_price || 0,
-      total_price: item.total_price || 0,
+      total_price: Number(item.total_price) || 0,
     }));
 
     return transformedData;
@@ -364,8 +417,7 @@ const DashboardPage = () => {
       item.inactive.toString(),
       item.broken.toString(),
       item.total.toString(),
-      `$${(item.unit_price || 0).toFixed(2)}`,
-      `$${(item.total_price || 0).toFixed(2)}`,
+      `৳${(item.total_price || 0).toFixed(2)}`,
     ]);
 
     // Add table
@@ -378,7 +430,6 @@ const DashboardPage = () => {
           "Inactive",
           "Damage",
           "Total Qty",
-          "Unit Price",
           "Total Value",
         ],
       ],
@@ -394,13 +445,12 @@ const DashboardPage = () => {
         halign: "center",
       },
       columnStyles: {
-        0: { halign: "left", cellWidth: 60 }, // Item Name
-        1: { halign: "center", cellWidth: 25 }, // Active
-        2: { halign: "center", cellWidth: 25 }, // Inactive
-        3: { halign: "center", cellWidth: 25 }, // Damage
-        4: { halign: "center", cellWidth: 25 }, // Total Qty
-        5: { halign: "center", cellWidth: 30 }, // Unit Price
-        6: { halign: "center", cellWidth: 35 }, // Total Value
+        0: { halign: "left", cellWidth: 70 }, // Item Name
+        1: { halign: "center", cellWidth: 30 }, // Active
+        2: { halign: "center", cellWidth: 30 }, // Inactive
+        3: { halign: "center", cellWidth: 30 }, // Damage
+        4: { halign: "center", cellWidth: 30 }, // Total Qty
+        5: { halign: "center", cellWidth: 45 }, // Total Value
       },
       alternateRowStyles: {
         fillColor: [245, 247, 250],
@@ -623,12 +673,19 @@ const DashboardPage = () => {
       >
         <Card className="p-6 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-medium text-green-600 dark:text-green-400">
                 Active Items
               </p>
               <p className="text-3xl font-bold text-green-700 dark:text-green-300">
                 {totalActive}
+              </p>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                Total Value: ৳
+                {totalActiveValue.toLocaleString("en-BD", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </p>
             </div>
             <CheckCircle className="h-12 w-12 text-green-500 opacity-80" />
@@ -637,12 +694,19 @@ const DashboardPage = () => {
 
         <Card className="p-6 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-red-200 dark:border-red-800">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-medium text-red-600 dark:text-red-400">
                 Broken Items
               </p>
               <p className="text-3xl font-bold text-red-700 dark:text-red-300">
                 {totalBroken}
+              </p>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                Total Value: ৳
+                {totalBrokenValue.toLocaleString("en-BD", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </p>
             </div>
             <XCircle className="h-12 w-12 text-red-500 opacity-80" />
@@ -651,12 +715,19 @@ const DashboardPage = () => {
 
         <Card className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/20 dark:to-gray-800/20 border-gray-200 dark:border-gray-800">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 Inactive Items
               </p>
               <p className="text-3xl font-bold text-gray-700 dark:text-gray-300">
                 {totalInactive}
+              </p>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                Total Value: ৳
+                {totalInactiveValue.toLocaleString("en-BD", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </p>
             </div>
             <AlertCircle className="h-12 w-12 text-gray-500 opacity-80" />
@@ -665,12 +736,19 @@ const DashboardPage = () => {
 
         <Card className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
                 Total Items
               </p>
               <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">
                 {totalActive + totalBroken + totalInactive}
+              </p>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                Total Value: ৳
+                {totalValue.toLocaleString("en-BD", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </p>
             </div>
             <Package className="h-12 w-12 text-blue-500 opacity-80" />
@@ -890,69 +968,100 @@ const DashboardPage = () => {
                         Total Qty
                       </TableHead>
                       <TableHead className="text-center font-semibold">
-                        Unit Price
-                      </TableHead>
-                      <TableHead className="text-center font-semibold">
                         Total Value
                       </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {itemBreakdownData.length > 0 ? (
-                      itemBreakdownData.map((item, index) => (
-                        <TableRow
-                          key={index}
-                          className={
-                            item.broken > 0
-                              ? "bg-red-50/50 dark:bg-red-900/10 hover:bg-red-100/50 dark:hover:bg-red-900/20"
-                              : ""
-                          }
-                        >
-                          <TableCell className="font-medium">
-                            {item.item}
+                      <>
+                        {itemBreakdownData.map((item, index) => (
+                          <TableRow
+                            key={index}
+                            className={
+                              item.broken > 0
+                                ? "bg-red-50/50 dark:bg-red-900/10 hover:bg-red-100/50 dark:hover:bg-red-900/20"
+                                : ""
+                            }
+                          >
+                            <TableCell className="font-medium">
+                              {item.item}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                                {item.active}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-300">
+                                {item.inactive}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <span
+                                className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-medium ${
+                                  item.broken > 0
+                                    ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 font-semibold"
+                                    : "bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-300"
+                                }`}
+                              >
+                                {item.broken}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                                {item.total}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                                ৳{(item.total_price || 0).toFixed(2)}
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {/* Total Row */}
+                        <TableRow className="bg-blue-50 dark:bg-blue-900/20 font-bold border-t-2 border-blue-200 dark:border-blue-800">
+                          <TableCell className="font-bold">TOTAL</TableCell>
+                          <TableCell className="text-center font-bold">
+                            {itemBreakdownData.reduce(
+                              (sum, item) => sum + item.active,
+                              0
+                            )}
                           </TableCell>
-                          <TableCell className="text-center">
-                            <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                              {item.active}
-                            </span>
+                          <TableCell className="text-center font-bold">
+                            {itemBreakdownData.reduce(
+                              (sum, item) => sum + item.inactive,
+                              0
+                            )}
                           </TableCell>
-                          <TableCell className="text-center">
-                            <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-300">
-                              {item.inactive}
-                            </span>
+                          <TableCell className="text-center font-bold">
+                            {itemBreakdownData.reduce(
+                              (sum, item) => sum + item.broken,
+                              0
+                            )}
                           </TableCell>
-                          <TableCell className="text-center">
-                            <span
-                              className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-medium ${
-                                item.broken > 0
-                                  ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 font-semibold"
-                                  : "bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-300"
-                              }`}
-                            >
-                              {item.broken}
-                            </span>
+                          <TableCell className="text-center font-bold">
+                            {itemBreakdownData.reduce(
+                              (sum, item) => sum + item.total,
+                              0
+                            )}
                           </TableCell>
-                          <TableCell className="text-center">
-                            <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                              {item.total}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                              ${(item.unit_price || 0).toFixed(2)}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <span className="text-sm font-semibold text-green-600 dark:text-green-400">
-                              ${(item.total_price || 0).toFixed(2)}
-                            </span>
+                          <TableCell className="text-center font-bold text-green-700 dark:text-green-400">
+                            ৳
+                            {itemBreakdownData
+                              .reduce(
+                                (sum, item) => sum + (item.total_price || 0),
+                                0
+                              )
+                              .toFixed(2)}
                           </TableCell>
                         </TableRow>
-                      ))
+                      </>
                     ) : (
                       <TableRow>
                         <TableCell
-                          colSpan={7}
+                          colSpan={6}
                           className="text-center text-gray-500 py-8"
                         >
                           No item data available
@@ -1027,6 +1136,11 @@ const DashboardPage = () => {
             </ResponsiveContainer>
           )}
         </Card>
+      </motion.div>
+
+      {/* Month-wise Asset Adjustment Section */}
+      <motion.div variants={itemVariants}>
+        <AssetAdjustmentSection audits={auditsResponse?.data ?? []} />
       </motion.div>
     </motion.div>
   );
