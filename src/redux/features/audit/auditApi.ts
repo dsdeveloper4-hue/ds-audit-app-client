@@ -70,6 +70,7 @@ const auditApi = baseApi.injectEndpoints({
       invalidatesTags: (_result, _error, { audit_id }) => [
         { type: "Audits", id: audit_id },
         "Audits",
+        "ItemDetails",
         "History",
       ],
     }),
@@ -84,7 +85,7 @@ const auditApi = baseApi.injectEndpoints({
         method: "PATCH",
         body: payload,
       }),
-      invalidatesTags: ["Audits", "History"],
+      invalidatesTags: ["Audits", "ItemDetails", "History"],
     }),
 
     // Delete item detail
@@ -93,7 +94,7 @@ const auditApi = baseApi.injectEndpoints({
         url: `/audits/items/${detail_id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Audits", "History"],
+      invalidatesTags: ["Audits", "ItemDetails", "History"],
     }),
 
     // Delete audit

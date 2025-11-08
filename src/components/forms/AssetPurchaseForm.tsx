@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Textarea } from "@/components/ui/textarea";
 import {
   useCreateAssetPurchaseMutation,
@@ -235,22 +236,19 @@ export function AssetPurchaseForm({
             </Label>
             {!showNewItemInput ? (
               <div className="flex gap-2">
-                <Select
+                <Combobox
+                  options={localItems.map((item) => ({
+                    value: item.id,
+                    label: item.name,
+                    subtitle: item.category,
+                  }))}
                   value={watch("item_id")}
                   onValueChange={(value) => setValue("item_id", value)}
-                >
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Select an item" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {localItems.map((item) => (
-                      <SelectItem key={item.id} value={item.id}>
-                        {item.name}
-                        {item.category && ` (${item.category})`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder="Select an item"
+                  searchPlaceholder="Search items..."
+                  emptyText="No items found."
+                  className="flex-1"
+                />
                 <Button
                   type="button"
                   variant="outline"
