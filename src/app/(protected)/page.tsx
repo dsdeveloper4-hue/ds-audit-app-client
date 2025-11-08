@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import {
   useGetAllAuditsQuery,
   useGetAuditByIdQuery,
@@ -32,6 +33,7 @@ import {
   ResponsiveContainer,
   LineChart,
   Line,
+  Cell,
 } from "recharts";
 import { Doughnut } from "react-chartjs-2";
 import "@/lib/chartSetup";
@@ -76,7 +78,25 @@ const STATUS_SUMMARY_COLORS = [
   "#9CA3AF", // Inactive light
 ];
 
+// Monthly bar colors - vibrant and distinct
+const MONTHLY_BAR_COLORS = [
+  "#3B82F6", // Blue
+  "#10B981", // Green
+  "#F59E0B", // Orange
+  "#8B5CF6", // Purple
+  "#EF4444", // Red
+  "#06B6D4", // Cyan
+  "#EC4899", // Pink
+  "#14B8A6", // Teal
+  "#F97316", // Deep Orange
+  "#6366F1", // Indigo
+  "#84CC16", // Lime
+  "#F43F5E", // Rose
+];
+
 const DashboardPage = () => {
+  const router = useRouter();
+
   const {
     data: latestAuditResponse,
     isLoading: isLatestLoading,
@@ -141,14 +161,44 @@ const DashboardPage = () => {
     skip: !currentAuditId,
   });
 
-  const roomItemData = React.useMemo(
-    () =>
-      (audit?.detailsByRoom ?? []).map((roomData: any) => ({
-        room: roomData.room.name,
-        itemCount: roomData.items.length,
-      })),
-    [audit]
-  );
+  // Monthly trends data - aggregate all audits by month/year
+  const monthlyTrendsData = React.useMemo(() => {
+    const allAudits = auditsResponse?.data ?? [];
+
+    // Sort audits by year and month
+    const sortedAudits = [...allAudits].sort((a, b) => {
+      if (a.year !== b.year) return a.year - b.year;
+      return a.month - b.month;
+    });
+
+    return sortedAudits.map((auditData: any, index: number) => {
+      const monthName =
+        months.find((m) => m.value === auditData.month)?.label ?? "Unknown";
+      const itemDetails = auditData.itemDetails ?? [];
+
+      // Calculate total items and value
+      let totalItems = 0;
+      let totalValue = 0;
+
+      itemDetails.forEach((detail: any) => {
+        const qty =
+          (detail.active_quantity || 0) +
+          (detail.broken_quantity || 0) +
+          (detail.inactive_quantity || 0);
+        totalItems += qty;
+        totalValue += Number(detail.total_price) || 0;
+      });
+
+      return {
+        period: `${monthName} ${auditData.year}`,
+        month: monthName,
+        year: auditData.year,
+        totalItems,
+        totalValue: Math.round(totalValue * 100) / 100,
+        color: MONTHLY_BAR_COLORS[index % MONTHLY_BAR_COLORS.length],
+      };
+    });
+  }, [auditsResponse]);
 
   const {
     totalActive,
@@ -369,6 +419,52 @@ const DashboardPage = () => {
     itemSummaryError,
     audit?.itemDetails,
   ]);
+
+  // Status-specific item lists
+  const activeItemsData = React.useMemo(() => {
+    return itemBreakdownData
+      .filter((item) => item.active > 0)
+      .map((item) => {
+        const totalQty = item.active + item.broken + item.inactive;
+        const pricePerUnit = totalQty > 0 ? item.total_price / totalQty : 0;
+        return {
+          ...item,
+          quantity: item.active,
+          value: pricePerUnit * item.active,
+        };
+      })
+      .sort((a, b) => b.value - a.value);
+  }, [itemBreakdownData]);
+
+  const brokenItemsData = React.useMemo(() => {
+    return itemBreakdownData
+      .filter((item) => item.broken > 0)
+      .map((item) => {
+        const totalQty = item.active + item.broken + item.inactive;
+        const pricePerUnit = totalQty > 0 ? item.total_price / totalQty : 0;
+        return {
+          ...item,
+          quantity: item.broken,
+          value: pricePerUnit * item.broken,
+        };
+      })
+      .sort((a, b) => b.value - a.value);
+  }, [itemBreakdownData]);
+
+  const inactiveItemsData = React.useMemo(() => {
+    return itemBreakdownData
+      .filter((item) => item.inactive > 0)
+      .map((item) => {
+        const totalQty = item.active + item.broken + item.inactive;
+        const pricePerUnit = totalQty > 0 ? item.total_price / totalQty : 0;
+        return {
+          ...item,
+          quantity: item.inactive,
+          value: pricePerUnit * item.inactive,
+        };
+      })
+      .sort((a, b) => b.value - a.value);
+  }, [itemBreakdownData]);
 
   // Pagination logic
   const totalItems = itemBreakdownData.length;
@@ -705,12 +801,15 @@ const DashboardPage = () => {
         actions={auditSwitcher}
       />
 
-      {/* Summary Cards */}
+      {/* Summary Cards - Clickable */}
       <motion.div
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
         variants={itemVariants}
       >
-        <Card className="p-6 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800">
+        <Card
+          className="p-6 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
+          onClick={() => router.push("/active-items")}
+        >
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <p className="text-sm font-medium text-green-600 dark:text-green-400">
@@ -731,7 +830,10 @@ const DashboardPage = () => {
           </div>
         </Card>
 
-        <Card className="p-6 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-red-200 dark:border-red-800">
+        <Card
+          className="p-6 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-red-200 dark:border-red-800 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
+          onClick={() => router.push("/broken-items")}
+        >
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <p className="text-sm font-medium text-red-600 dark:text-red-400">
@@ -752,7 +854,10 @@ const DashboardPage = () => {
           </div>
         </Card>
 
-        <Card className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/20 dark:to-gray-800/20 border-gray-200 dark:border-gray-800">
+        <Card
+          className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/20 dark:to-gray-800/20 border-gray-200 dark:border-gray-800 cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
+          onClick={() => router.push("/inactive-items")}
+        >
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -797,37 +902,117 @@ const DashboardPage = () => {
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Room-Item Count Chart */}
+        {/* Monthly Trends Chart */}
         <motion.div variants={itemVariants} className="h-full">
           <Card className="p-6 h-full flex flex-col">
             <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-              Items per Room
+              Total Items and Total Value per Month
             </h3>
-            <div className="mt-4 flex-1 min-h-[16rem]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={roomItemData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey="room"
-                    angle={-45}
-                    textAnchor="end"
-                    height={80}
-                    style={{ fontSize: "12px" }}
-                  />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar
-                    dataKey="itemCount"
-                    fill={COLORS.total}
-                    name="Item Count"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="mt-4 flex-1 min-h-[20rem]">
+              {monthlyTrendsData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={monthlyTrendsData}
+                    margin={{ top: 40, right: 30, left: 20, bottom: 80 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis
+                      dataKey="period"
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                      style={{ fontSize: "12px", fontWeight: 500 }}
+                      stroke="#6b7280"
+                    />
+                    <YAxis
+                      label={{
+                        value: "Total Items",
+                        angle: -90,
+                        position: "insideLeft",
+                        style: {
+                          fontSize: "14px",
+                          fontWeight: 600,
+                          fill: "#374151",
+                        },
+                      }}
+                      stroke="#6b7280"
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                      }}
+                      formatter={(value: number, name: string) => {
+                        if (name === "Total Items") {
+                          return [value, name];
+                        }
+                        return [
+                          `৳${value.toLocaleString("en-BD", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}`,
+                          name,
+                        ];
+                      }}
+                    />
+                    <Legend
+                      wrapperStyle={{
+                        paddingTop: "20px",
+                        fontSize: "14px",
+                        fontWeight: 600,
+                      }}
+                    />
+                    <Bar
+                      dataKey="totalItems"
+                      name="Total Items"
+                      radius={[8, 8, 0, 0]}
+                      label={{
+                        position: "top",
+                        content: (props: any) => {
+                          const { x, y, width, value, index } = props;
+                          const entry = monthlyTrendsData[index];
+                          const totalValue = entry?.totalValue || 0;
+                          return (
+                            <text
+                              x={x + width / 2}
+                              y={y - 5}
+                              fill="#059669"
+                              textAnchor="middle"
+                              fontSize="11"
+                              fontWeight="700"
+                            >
+                              ৳
+                              {totalValue.toLocaleString("en-BD", {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0,
+                              })}
+                            </text>
+                          );
+                        },
+                      }}
+                    >
+                      {monthlyTrendsData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">No monthly data available</p>
+                    <p className="text-sm text-gray-400 mt-2">
+                      Create audits to see trends over time
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </Card>
         </motion.div>
-
         {/* Status Summary Donut Chart */}
         <motion.div variants={itemVariants} className="h-full">
           <Card className="p-6 h-full flex flex-col">

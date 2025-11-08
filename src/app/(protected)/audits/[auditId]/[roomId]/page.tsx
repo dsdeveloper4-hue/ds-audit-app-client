@@ -69,6 +69,8 @@ export default function ItemDetailsPage() {
       (detail) => detail.room_id === roomId && detail.audit_id === auditId
     ) || [];
 
+  console.log(filteredItemDetails);
+
   const room = roomData?.data;
   const audit = auditData?.data;
 
@@ -147,12 +149,7 @@ export default function ItemDetailsPage() {
       0
     ),
     totalValue: filteredItemDetails.reduce((sum, detail) => {
-      const unitPrice = detail.unit_price || detail.item?.unit_price || 0;
-      const totalQty =
-        detail.active_quantity +
-        detail.broken_quantity +
-        detail.inactive_quantity;
-      return sum + Number(unitPrice) * totalQty;
+      return sum + Number(detail.total_price || 0);
     }, 0),
   };
 
@@ -260,28 +257,11 @@ export default function ItemDetailsPage() {
       ),
     },
     {
-      key: "unit_price",
-      header: "Unit Price",
-      className: "text-center",
-      render: (itemDetail: TItemDetail) => {
-        const unitPrice =
-          itemDetail.unit_price || itemDetail.item?.unit_price || 0;
-        return (
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            ৳{Number(unitPrice).toFixed(2)}
-          </span>
-        );
-      },
-    },
-    {
       key: "total_price",
       header: "Total Value",
       className: "text-center",
       render: (itemDetail: TItemDetail) => {
-        const unitPrice =
-          itemDetail.unit_price || itemDetail.item?.unit_price || 0;
-        const totalQty = getTotalQuantity(itemDetail);
-        const totalPrice = Number(unitPrice) * totalQty;
+        const totalPrice = Number(itemDetail.total_price) || 0;
         return (
           <span className="text-sm font-semibold text-green-600 dark:text-green-400">
             ৳{totalPrice.toFixed(2)}
